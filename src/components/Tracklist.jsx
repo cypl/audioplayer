@@ -1,31 +1,33 @@
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-import { GetData } from '../api'
 
-const getMinutes = (seconds) => {
-    return Math.round(seconds / 60)
-}
-const getSeconds = (seconds) => {
-    const minutes = Math.round(seconds / 60)
-    return seconds - (minutes * 60)
-}
+// const getMinutes = (seconds) => {
+//     return Math.round(seconds / 60)
+// }
+// const getSeconds = (seconds) => {
+//     const minutes = Math.round(seconds / 60)
+//     return seconds - (minutes * 60)
+// }
 
-function Tracklist({audioSrc, setAudioSrc}){
+function Tracklist({data, audioSrc, launchTrack}){
 
-    const tracklist = GetData("data/tracklist.json")
-    const showTracklist = tracklist.dataFetched.length > 0 && !tracklist.isDataLoading && tracklist.isError == null
-    const tracks = tracklist.dataFetched
+    const showTracklist = data.dataFetched.length > 0 && !data.isDataLoading && data.isError == null
+    const tracks = data.dataFetched
 
     return(
         <>
             <TracksWrapper>
-                {showTracklist &&
+                {showTracklist ?
                     <>
                         {tracks.map((track) => (
-                            <Track key={track.id} onClick={() => setAudioSrc(track.source)} className={audioSrc === track.source ? "active" : ""}>
-                                <span>{track.artist} - {track.song} {getMinutes(track.duration)}:{getSeconds(track.duration)}</span>
+                            <Track key={track.id} onClick={() => launchTrack(track.source)} className={audioSrc === track.source ? "active" : ""}>
+                                <span>{track.artist} - {track.song}</span>
                             </Track>
                         ))}
+                    </>
+                    :
+                    <>
+                        <Track>En cours de chargement...</Track>
                     </>
                 }
             </TracksWrapper>
@@ -36,8 +38,9 @@ function Tracklist({audioSrc, setAudioSrc}){
 export default Tracklist
 
 Tracklist.propTypes = {
-    setAudioSrc: PropTypes.func,
+    data: PropTypes.object,
     audioSrc: PropTypes.string,
+    launchTrack: PropTypes.func,
 }
 
 const TracksWrapper = styled.div`
