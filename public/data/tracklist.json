@@ -1,0 +1,23 @@
+[
+    {
+        "id":1,
+        "artist":"JakoJako",
+        "song":"Deine Augen",
+        "source":"data/mp3/04 - JakoJako - Deine Augen (Original Mix).mp3",
+        "duration": 317
+    },
+    {
+        "id":2,
+        "artist":"Tin Man",
+        "song":"Lovely Acid",
+        "source":"data/mp3/11 - Tin Man - Lovely Acid (Original Mix).mp3",
+        "duration":366
+    },
+    {
+        "id":3,
+        "artist":"Vril",
+        "song":"Riese",
+        "source":"data/mp3/04 - Vril - Riese (Rework).mp3",
+        "duration":281
+    }
+]
