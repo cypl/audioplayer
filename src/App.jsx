@@ -32,6 +32,7 @@ function App() {
     // gainNodeRef.current.disconnect(); déconnecte le gainNode de toute destination ou source à laquelle il était connecté. 
     // Cela est utile pour éviter les fuites de mémoire et s'assurer que les ressources audio sont correctement libérées lorsque le composant n'est plus utilisé.
     return () => {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
       gainNodeRef.current.disconnect();
     };
   }, []);
@@ -147,6 +148,7 @@ function App() {
         audioRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
       };
     } 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioRef.current]);
 
   // Permet de mettre à jour la position de lecture dans la piste audio
