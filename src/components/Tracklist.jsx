@@ -1,13 +1,6 @@
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
-
-// const getMinutes = (seconds) => {
-//     return Math.round(seconds / 60)
-// }
-// const getSeconds = (seconds) => {
-//     const minutes = Math.round(seconds / 60)
-//     return seconds - (minutes * 60)
-// }
+import { colorsUI, sizesUI } from '../utils/UI'
 
 function Tracklist({data, audioSrc, launchTrack}){
 
@@ -44,9 +37,9 @@ Tracklist.propTypes = {
 }
 
 const TracksWrapper = styled.div`
-    width:20rem;
-    background-color:#111;
-    border-radius:0.3rem;
+    width:100%;
+    background:${colorsUI.background};
+    border-radius:${sizesUI.radius};
 `
 const Track = styled.p`
     padding:0.75rem 0.6rem;
@@ -54,13 +47,13 @@ const Track = styled.p`
     line-height:1;
     margin:0;
     cursor:pointer;
-    border-bottom:1px solid rgba(255,255,255,0.1);
+    border-bottom:1px solid ${colorsUI.border};
     text-align:left;
-    color:rgba(255,255,255,0.6);
+    color:${colorsUI.textInactive};
     &:last-child{
         border-bottom:0;
     }
     &.active{
-        color:rgba(255,255,255,1);
+        color:${colorsUI.textActive};
     }
 `
