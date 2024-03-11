@@ -10,11 +10,11 @@ function TimeControler({currentTime, duration, control}){
             <TimeControllerChrono className="current">{duration ? formatDuration(currentTime) : "-:--"}</TimeControllerChrono>
             <TimeControllerBar>
                 <div className="bar-wrapper">
-                    <div className="bar-wrapper-progression" style={{width: currentTime/duration*100 + "%"}}></div>
+                    <div className="bar-wrapper-progression" style={{width: duration ? currentTime/duration*100 + "%" : "0%"}}></div>
                 </div>
                 <input type="range" min="0" max={duration} value={currentTime} onChange={control} />
             </TimeControllerBar>
-            <TimeControllerChrono className="total-duration">{duration ? formatDuration(duration) : "-:--"}</TimeControllerChrono>
+            <TimeControllerChrono className="total-duration">{duration ? "-" + formatDuration(duration - currentTime) : "-:--"}</TimeControllerChrono>
         </TimeControllerWrapper>
     )
 }
