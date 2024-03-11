@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types'
 import styled from 'styled-components'
 import { colorsUI, sizesUI } from '../utils/UI'
+import { formatDuration } from '../utils/formatDuration'
 
 function Tracklist({data, audioSrc, launchTrack}){
 
@@ -15,6 +16,7 @@ function Tracklist({data, audioSrc, launchTrack}){
                         {tracks.map((track) => (
                             <Track key={track.id} onClick={() => launchTrack(track.source)} className={audioSrc === track.source ? "active" : ""}>
                                 <span>{track.artist} - {track.song}</span>
+                                <span>{formatDuration(track.duration)}</span>
                             </Track>
                         ))}
                     </>
@@ -50,6 +52,8 @@ const Track = styled.p`
     border-bottom:1px solid ${colorsUI.border};
     text-align:left;
     color:${colorsUI.textInactive};
+    display:flex;
+    justify-content:space-between;
     &:last-child{
         border-bottom:0;
     }
