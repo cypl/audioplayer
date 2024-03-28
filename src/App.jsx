@@ -10,10 +10,12 @@ import IconPrev from './components/IconPrev';
 import IconPlay from './components/IconPlay';
 import IconPause from './components/IconPause';
 import IconNext from './components/IconNext';
+import AudioVisualizer2 from './components/AudioVisualizer2';
 
 
 // Déclaration du contexte audio à l'extérieur du composant pour qu'il soit partagé globalement
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -28,9 +30,27 @@ function App() {
   const [volume, setVolume] = useState(0.8);
   // Initialiser gainNodeRef une seule fois et ne pas le recréer avec chaque source
   const gainNodeRef = useRef(audioContext.createGain());
+  const analyserNodeRef = useRef(audioContext.createAnalyser());
+
   // Connecter gainNode au contexte audio dès le début et ne pas le déconnecter
   useEffect(() => {
+    // gainNodeRef.current.connect(analyserNodeRef.current);
+    // gainNodeRef.current.connect(audioContext.destination);
+    // analyserNodeRef.current.fftSize = 2048;
+    // analyserDataRef.current = new Float32Array(analyserNodeRef.current.frequencyBinCount);
+
+    // const getAnalyserData = () => {
+    //   // Utiliser getByteFrequencyData ou getFloatFrequencyData selon le type de données souhaité
+    //   analyserNodeRef.current.getFloatFrequencyData(analyserDataRef.current);
+    //   // Maintenant, analyserDataRef.current contient les données d'analyse actualisées
+    //   // Vous pouvez utiliser ces données pour dessiner votre visualisation
+    // };
+
+    // console.log(getAnalyserData())
+    analyserNodeRef.current.fftSize = 32; // 2048 Exemple de taille, ajustez selon vos besoins
+    gainNodeRef.current.connect(analyserNodeRef.current);
     gainNodeRef.current.connect(audioContext.destination);
+    
     // Logique de nettoyage : 
     // La fonction de retour dans useEffect est une instruction de nettoyage 
     // qui s'exécute lorsque le composant est sur le point de se démonter. 
@@ -41,6 +61,7 @@ function App() {
       gainNodeRef.current.disconnect();
     };
   }, []);
+
   // Si le volume change, le gain du lecteur s'ajuste
   useEffect(() => {
     gainNodeRef.current.gain.value = volume;
@@ -85,6 +106,34 @@ function App() {
     setIsPlaying(false);
   }
 
+
+  // Gestion des données de fréquences 
+  const [dataFrequency, setDataFrequency] = useState(new Uint8Array(0));
+
+  useEffect(() => {
+    let intervalId;
+    
+    // Modifier la condition pour arrêter également lorsque isPaused est vrai
+    if (isPlaying && !isPaused) {
+      intervalId = setInterval(updateAnalyserData, 50); // génère une analyse toutes les 100ms
+    } else {
+      // Arrêter l'intervalle si l'audio est en pause ou arrêté
+      clearInterval(intervalId);
+    }
+    
+    // Nettoyage de l'effet qui arrête l'intervalle quand le composant se démonte ou quand isPlaying/isPaused change
+    return () => clearInterval(intervalId);
+  }, [isPlaying, isPaused]); // Ajouter isPaused aux dépendances de useEffect
+  
+  const updateAnalyserData = () => {
+    if (!isPlaying || isPaused) return; // Arrête la mise à jour si l'audio n'est pas en cours de lecture ou est en pause
+    const frequencyData = new Uint8Array(analyserNodeRef.current.frequencyBinCount);
+    analyserNodeRef.current.getByteFrequencyData(frequencyData);
+    // const frequencyData = new Float32Array(analyserNodeRef.current.frequencyBinCount);
+    // analyserNodeRef.current.getFloatFrequencyData(frequencyData);
+    setDataFrequency(frequencyData); // Mise à jour de l'état avec les nouvelles données
+  };
+
   // Permet de lancer la lecture de la piste audio
   const play = () => {
     // Réactiver le contexte audio si nécessaire (par exemple, après une suspension due à des politiques du navigateur)
@@ -113,17 +162,6 @@ function App() {
       setIsPaused(true);
     }
   }
-
-  // // Permet d'arrêter la lecture de la piste audio, et réinitialiser
-  // const stop = () => {
-  //   if (audioRef.current) {
-  //     audioRef.current.pause();
-  //     audioRef.current.currentTime = 0;
-  //     setIsPlaying(false);
-  //     setIsPaused(false);
-  //     setCurrentTime(0);
-  //   }
-  // }
 
   const launchTrack = (source) => {
     if (isPlaying) {
@@ -179,6 +217,7 @@ function App() {
   }
 
   return (
+    <>
       <Player>
         <ButtonsWrapper>
           <Button inactive={!isPlaying && !isPaused} icon={<IconPrev/>}/>
@@ -194,20 +233,22 @@ function App() {
         <TrackTimeControler currentTime={currentTime} duration={duration} control={controlProgression} />
         <Volume volume={volume} setVolume={setVolume} />
         <Tracklist data={tracklist} audioSrc={audioSrc} launchTrack={launchTrack}/>
-
       </Player>
+      <AudioVisualizer2 dataFrequency={dataFrequency}/>
+    </>
   );
 }
 
 export default App;
 
 const Player = styled.div`
+  position:absolute;
   background:${colorsUI.background};
   border-radius:${sizesUI.radiusBig};
   width:20rem;
   padding:0.5rem;
-  margin-top:3rem;
-  margin-left:3rem;
+  top:1rem;
+  left:1rem;
 `
 const ButtonsWrapper = styled.div`
   padding-bottom:0.8rem;
