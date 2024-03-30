@@ -8,7 +8,6 @@ const AudioVisualizer2 = ({ dataFrequency }) => {
     const sketchRef = useRef();
     const p5Instance = useRef(null);
     const latestData = useRef(dataFrequency); // Stocker la dernière dataFrequency pour l'accès dans draw
-    console.log(dataFrequency)
     useEffect(() => {
       // Initialisation du sketch p5.js
       const sketch = (p) => {

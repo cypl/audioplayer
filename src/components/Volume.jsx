@@ -44,7 +44,7 @@ const Wrapper = styled.div`
     width:14rem;
     margin:2rem auto;
     display:flex;
-    display:none;
+    //display:none;
 `
 const Mute = styled.div`
     height:1rem;

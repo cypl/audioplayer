@@ -31,34 +31,29 @@ function App() {
   // Initialiser gainNodeRef une seule fois et ne pas le recréer avec chaque source
   const gainNodeRef = useRef(audioContext.createGain());
   const analyserNodeRef = useRef(audioContext.createAnalyser());
+  const analyserNodeRefRight = useRef(audioContext.createAnalyser());
+
+  const splitterRef = useRef(audioContext.createChannelSplitter(2)); // Pour un signal stéréo
 
   // Connecter gainNode au contexte audio dès le début et ne pas le déconnecter
   useEffect(() => {
-    // gainNodeRef.current.connect(analyserNodeRef.current);
-    // gainNodeRef.current.connect(audioContext.destination);
-    // analyserNodeRef.current.fftSize = 2048;
-    // analyserDataRef.current = new Float32Array(analyserNodeRef.current.frequencyBinCount);
-
-    // const getAnalyserData = () => {
-    //   // Utiliser getByteFrequencyData ou getFloatFrequencyData selon le type de données souhaité
-    //   analyserNodeRef.current.getFloatFrequencyData(analyserDataRef.current);
-    //   // Maintenant, analyserDataRef.current contient les données d'analyse actualisées
-    //   // Vous pouvez utiliser ces données pour dessiner votre visualisation
-    // };
-
-    // console.log(getAnalyserData())
-    analyserNodeRef.current.fftSize = 32; // 2048 Exemple de taille, ajustez selon vos besoins
-    gainNodeRef.current.connect(analyserNodeRef.current);
+    analyserNodeRef.current.fftSize = 2048;
+    analyserNodeRefRight.current.fftSize = 2048;
+  
+    // Connecter le gainNode à la destination audio pour jouer le son
     gainNodeRef.current.connect(audioContext.destination);
     
-    // Logique de nettoyage : 
-    // La fonction de retour dans useEffect est une instruction de nettoyage 
-    // qui s'exécute lorsque le composant est sur le point de se démonter. 
-    // gainNodeRef.current.disconnect(); déconnecte le gainNode de toute destination ou source à laquelle il était connecté. 
-    // Cela est utile pour éviter les fuites de mémoire et s'assurer que les ressources audio sont correctement libérées lorsque le composant n'est plus utilisé.
+    // Connecter le gainNode au splitter pour analyser les canaux séparément
+    gainNodeRef.current.connect(splitterRef.current); 
+    
+    // Connecter le splitter aux AnalyserNodes pour les canaux gauche et droit
+    //splitterRef.current.connect(analyserNodeRef.current, 0); // Canal gauche
+    //splitterRef.current.connect(analyserNodeRefRight.current, 1); // Canal droit
+  
+    // Logique de nettoyage
     return () => {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
       gainNodeRef.current.disconnect();
+      splitterRef.current.disconnect();
     };
   }, []);
 
@@ -68,36 +63,43 @@ function App() {
   }, [volume]);
 
   // Gestion de la lecture de la piste audio, lors d'un changement de source audio
-  useEffect(() => {
-    if (audioSrc) {
-      // S'assurer que l'audio est arrêté et remis à zéro
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      }
-  
-      // Charger et jouer la nouvelle source
-      const audio = new Audio(audioSrc);
-      audio.crossOrigin = "anonymous";
-      audioRef.current = audio;
-  
-      const track = audioContext.createMediaElementSource(audio);
-      track.connect(gainNodeRef.current);
-  
-      gainNodeRef.current.gain.value = volume;
-  
-      audioRef.current.addEventListener('ended', handleAudioEnded);
-  
-      // Cette vérification permet de relancer la lecture si isPlaying est vrai,
-      // ou de la démarrer si nous changeons la source alors que la lecture n'était pas active.
-      if (isPlaying || !isPaused) {
-        audio.play().catch(e => console.error(e));
-        setIsPlaying(true);
-        setIsPaused(false);
-      }
+useEffect(() => {
+  if (audioSrc) {
+    // S'assurer que l'audio est arrêté et remis à zéro
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [audioSrc]);
+
+    // Charger et jouer la nouvelle source
+    const audio = new Audio(audioSrc);
+    audio.crossOrigin = "anonymous";
+    audioRef.current = audio;
+
+    const track = audioContext.createMediaElementSource(audioRef.current);
+    track.connect(gainNodeRef.current); // Connecter la source au gainNode
+
+    // Connexion correcte du splitter et des analyseurs
+    track.connect(splitterRef.current); // Connectez la source au splitter
+    splitterRef.current.connect(analyserNodeRef.current, 0); // Connecter le canal gauche à analyserNodeRef
+    splitterRef.current.connect(analyserNodeRefRight.current, 1); // Connecter le canal droit à analyserNodeRefRight
+
+    gainNodeRef.current.connect(audioContext.destination); // Connecter le gainNode à la destination
+
+    gainNodeRef.current.gain.value = volume;
+
+    audioRef.current.addEventListener('ended', handleAudioEnded);
+
+    // Cette vérification permet de relancer la lecture si isPlaying est vrai,
+    // ou de la démarrer si nous changeons la source alors que la lecture n'était pas active.
+    if (isPlaying || !isPaused) {
+      audio.play().catch(e => console.error(e));
+      setIsPlaying(true);
+      setIsPaused(false);
+    }
+  }
+}, [audioSrc]); // Assurez-vous d'ajouter toutes les dépendances nécessaires ici
+
 
 
   // Définir la fonction de rappel pour l'événement 'ended'
@@ -106,16 +108,17 @@ function App() {
     setIsPlaying(false);
   }
 
-
   // Gestion des données de fréquences 
   const [dataFrequency, setDataFrequency] = useState(new Uint8Array(0));
-
+  const [dataFrequencyRight, setDataFrequencyRight] = useState(new Uint8Array(0));
+  console.log("left:" + dataFrequency)
+  console.log("right:" + dataFrequencyRight)
   useEffect(() => {
     let intervalId;
     
     // Modifier la condition pour arrêter également lorsque isPaused est vrai
     if (isPlaying && !isPaused) {
-      intervalId = setInterval(updateAnalyserData, 50); // génère une analyse toutes les 100ms
+      intervalId = setInterval(updateAnalyserData, 100); // génère une analyse toutes les 100ms
     } else {
       // Arrêter l'intervalle si l'audio est en pause ou arrêté
       clearInterval(intervalId);
@@ -127,11 +130,15 @@ function App() {
   
   const updateAnalyserData = () => {
     if (!isPlaying || isPaused) return; // Arrête la mise à jour si l'audio n'est pas en cours de lecture ou est en pause
+    // Signal de gauche
     const frequencyData = new Uint8Array(analyserNodeRef.current.frequencyBinCount);
     analyserNodeRef.current.getByteFrequencyData(frequencyData);
-    // const frequencyData = new Float32Array(analyserNodeRef.current.frequencyBinCount);
-    // analyserNodeRef.current.getFloatFrequencyData(frequencyData);
+    // Signal de droite
+    const frequencyDataRight = new Uint8Array(analyserNodeRefRight.current.frequencyBinCount);
+    analyserNodeRefRight.current.getByteFrequencyData(frequencyDataRight);
+    
     setDataFrequency(frequencyData); // Mise à jour de l'état avec les nouvelles données
+    setDataFrequencyRight(frequencyDataRight); // Mise à jour de l'état avec les nouvelles données
   };
 
   // Permet de lancer la lecture de la piste audio
