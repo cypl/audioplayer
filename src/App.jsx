@@ -1,205 +1,103 @@
 import { useState, useEffect, useRef } from 'react';
+import styled from 'styled-components'
+import { GetData } from './api';
+import { colorsUI, sizesUI } from './utils/UI';
 import Volume from './components/Volume';
 import Tracklist from './components/Tracklist';
-import { GetData } from './api';
 import TrackTimeControler from './components/TimeControler';
-import styled from 'styled-components'
-import { colorsUI, sizesUI } from './utils/UI';
+import AudioVisualizer2 from './components/AudioVisualizer2';
 import Button from './components/Button';
 import IconPrev from './components/IconPrev';
 import IconPlay from './components/IconPlay';
 import IconPause from './components/IconPause';
 import IconNext from './components/IconNext';
-import AudioVisualizer2 from './components/AudioVisualizer2';
 
 
 // Déclaration du contexte audio à l'extérieur du composant pour qu'il soit partagé globalement
 const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const audioRef = useRef(null);
-  // Gestion de la source audio
   const [audioSrc, setAudioSrc] = useState(null);
-  // Get data for the tracklist
+  const [volume, setVolume] = useState(0.8);
+  const [dataFrequency, setDataFrequency] = useState(new Uint8Array(0));
+  const [dataFrequencyRight, setDataFrequencyRight] = useState(new Uint8Array(0));
+  const [duration, setDuration] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
   const tracklist = GetData("data/tracklist.json");
 
-  // Gestion du volume
-  const [volume, setVolume] = useState(0.8);
-  // Initialiser gainNodeRef une seule fois et ne pas le recréer avec chaque source
+  const audioRef = useRef(new Audio());
   const gainNodeRef = useRef(audioContext.createGain());
   const analyserNodeRef = useRef(audioContext.createAnalyser());
   const analyserNodeRefRight = useRef(audioContext.createAnalyser());
+  const splitterRef = useRef(audioContext.createChannelSplitter(2));
 
-  const splitterRef = useRef(audioContext.createChannelSplitter(2)); // Pour un signal stéréo
-
-  // Connecter gainNode au contexte audio dès le début et ne pas le déconnecter
   useEffect(() => {
+    const track = audioContext.createMediaElementSource(audioRef.current);
+    track.connect(gainNodeRef.current);
+    gainNodeRef.current.connect(splitterRef.current);
+    splitterRef.current.connect(analyserNodeRef.current, 0);
+    splitterRef.current.connect(analyserNodeRefRight.current, 1);
+    gainNodeRef.current.connect(audioContext.destination);
+
     analyserNodeRef.current.fftSize = 2048;
     analyserNodeRefRight.current.fftSize = 2048;
-  
-    // Connecter le gainNode à la destination audio pour jouer le son
-    gainNodeRef.current.connect(audioContext.destination);
-    
-    // Connecter le gainNode au splitter pour analyser les canaux séparément
-    gainNodeRef.current.connect(splitterRef.current); 
-    
-    // Connecter le splitter aux AnalyserNodes pour les canaux gauche et droit
-    //splitterRef.current.connect(analyserNodeRef.current, 0); // Canal gauche
-    //splitterRef.current.connect(analyserNodeRefRight.current, 1); // Canal droit
-  
-    // Logique de nettoyage
+
     return () => {
-      gainNodeRef.current.disconnect();
-      splitterRef.current.disconnect();
+      audioRef.current.pause();
+      audioContext.close();
     };
   }, []);
 
-  // Si le volume change, le gain du lecteur s'ajuste
+  useEffect(() => {
+    if (audioSrc) {
+      audioRef.current.src = audioSrc;
+      audioRef.current.load();
+      audioRef.current.addEventListener('loadedmetadata', () => {
+        setDuration(audioRef.current.duration);
+      });
+      audioRef.current.addEventListener('ended', handleAudioEnded);
+    }
+  }, [audioSrc]);
+
   useEffect(() => {
     gainNodeRef.current.gain.value = volume;
   }, [volume]);
 
-  // Gestion de la lecture de la piste audio, lors d'un changement de source audio
-useEffect(() => {
-  if (audioSrc) {
-    // S'assurer que l'audio est arrêté et remis à zéro
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-    }
-
-    // Charger et jouer la nouvelle source
-    const audio = new Audio(audioSrc);
-    audio.crossOrigin = "anonymous";
-    audioRef.current = audio;
-
-    const track = audioContext.createMediaElementSource(audioRef.current);
-    track.connect(gainNodeRef.current); // Connecter la source au gainNode
-
-    // Connexion correcte du splitter et des analyseurs
-    track.connect(splitterRef.current); // Connectez la source au splitter
-    splitterRef.current.connect(analyserNodeRef.current, 0); // Connecter le canal gauche à analyserNodeRef
-    splitterRef.current.connect(analyserNodeRefRight.current, 1); // Connecter le canal droit à analyserNodeRefRight
-
-    gainNodeRef.current.connect(audioContext.destination); // Connecter le gainNode à la destination
-
-    gainNodeRef.current.gain.value = volume;
-
-    audioRef.current.addEventListener('ended', handleAudioEnded);
-
-    // Cette vérification permet de relancer la lecture si isPlaying est vrai,
-    // ou de la démarrer si nous changeons la source alors que la lecture n'était pas active.
-    if (isPlaying || !isPaused) {
-      audio.play().catch(e => console.error(e));
-      setIsPlaying(true);
-      setIsPaused(false);
-    }
-  }
-}, [audioSrc]); // Assurez-vous d'ajouter toutes les dépendances nécessaires ici
-
-
-
-  // Définir la fonction de rappel pour l'événement 'ended'
-  const handleAudioEnded = () => {
-    setIsPaused(false);
-    setIsPlaying(false);
-  }
-
-  // Gestion des données de fréquences 
-  const [dataFrequency, setDataFrequency] = useState(new Uint8Array(0));
-  const [dataFrequencyRight, setDataFrequencyRight] = useState(new Uint8Array(0));
-  console.log("left:" + dataFrequency)
-  console.log("right:" + dataFrequencyRight)
   useEffect(() => {
-    let intervalId;
-    
-    // Modifier la condition pour arrêter également lorsque isPaused est vrai
-    if (isPlaying && !isPaused) {
-      intervalId = setInterval(updateAnalyserData, 100); // génère une analyse toutes les 100ms
-    } else {
-      // Arrêter l'intervalle si l'audio est en pause ou arrêté
-      clearInterval(intervalId);
-    }
-    
-    // Nettoyage de l'effet qui arrête l'intervalle quand le composant se démonte ou quand isPlaying/isPaused change
+    const updateAnalyserData = () => {
+      if (isPlaying && !isPaused) {
+        const frequencyData = new Uint8Array(analyserNodeRef.current.frequencyBinCount);
+        analyserNodeRef.current.getByteFrequencyData(frequencyData);
+        setDataFrequency(frequencyData);
+
+        const frequencyDataRight = new Uint8Array(analyserNodeRefRight.current.frequencyBinCount);
+        analyserNodeRefRight.current.getByteFrequencyData(frequencyDataRight);
+        setDataFrequencyRight(frequencyDataRight);
+      }
+    };
+
+    const intervalId = setInterval(updateAnalyserData, 50);
+
     return () => clearInterval(intervalId);
-  }, [isPlaying, isPaused]); // Ajouter isPaused aux dépendances de useEffect
-  
-  const updateAnalyserData = () => {
-    if (!isPlaying || isPaused) return; // Arrête la mise à jour si l'audio n'est pas en cours de lecture ou est en pause
-    // Signal de gauche
-    const frequencyData = new Uint8Array(analyserNodeRef.current.frequencyBinCount);
-    analyserNodeRef.current.getByteFrequencyData(frequencyData);
-    // Signal de droite
-    const frequencyDataRight = new Uint8Array(analyserNodeRefRight.current.frequencyBinCount);
-    analyserNodeRefRight.current.getByteFrequencyData(frequencyDataRight);
-    
-    setDataFrequency(frequencyData); // Mise à jour de l'état avec les nouvelles données
-    setDataFrequencyRight(frequencyDataRight); // Mise à jour de l'état avec les nouvelles données
-  };
+  }, [isPlaying, isPaused]);
 
-  // Permet de lancer la lecture de la piste audio
   const play = () => {
-    // Réactiver le contexte audio si nécessaire (par exemple, après une suspension due à des politiques du navigateur)
-    if (audioContext.state === 'suspended') {
-      audioContext.resume().then(() => {
-        setIsPlaying(true);
-        setIsPaused(false);
-        // Tenter de jouer l'audio si la référence existe et que la source est prête
-        if (audioRef.current) {
-          audioRef.current.play().catch(e => console.error(e));
-        }
-      });
-    } else if (audioRef.current) {
-      // Jouer l'audio si la référence existe
-      audioRef.current.play().catch(e => console.error(e));
-      setIsPlaying(true);
-      setIsPaused(false);
-    }
-  }
-  
-  // Permet de mettre en pause la lecture de la piste audio
-  const pause = () => {
-    if (audioRef.current) {
-      audioRef.current.pause();
-      setIsPlaying(true);
-      setIsPaused(true);
-    }
-  }
-
-  const launchTrack = (source) => {
-    if (isPlaying) {
-      // Arrêter la lecture actuelle avant de changer de source
-      stop(); // Assurez-vous que cette fonction réinitialise isPlaying et isPaused comme nécessaire
-    }
-    // Mettre à jour la source audio, ce qui déclenchera le useEffect pour charger et jouer la nouvelle source
-    setAudioSrc(source);
-    // La logique dans useEffect pour audioSrc devrait s'occuper de jouer la nouvelle source si isPlaying est vrai
+    setIsPlaying(true);
+    setIsPaused(false);
+    audioRef.current.play();
   };
 
+  const pause = () => {
+    setIsPaused(true);
+    audioRef.current.pause();
+  };
 
-  // Gestion de la progression
-  const [duration, setDuration] = useState(0); // État pour stocker la durée de la piste audio
-  const [currentTime, setCurrentTime] = useState(0); // État pour la position actuelle de lecture dans la piste audio
-
-  // Permet de déterminer la durée de la piste audio, 
-  // une fois que les métadonnées de la piste sont chargées
-  useEffect(() => {
-    if (audioRef.current) {
-      const handleLoadedMetadata = () => {
-        setDuration(audioRef.current.duration);
-      };
-      audioRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
-      // Nettoyage
-      return () => {
-        audioRef.current.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      };
-    } 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [audioRef.current]);
+  const handleAudioEnded = () => {
+    setIsPlaying(false);
+    setIsPaused(false);
+  };
 
   // Permet de mettre à jour la position de lecture dans la piste audio
   useEffect(() => {
@@ -216,12 +114,25 @@ useEffect(() => {
     };
   }, [isPlaying]);
   
+  const launchTrack = (source) => {
+    if (isPlaying) {
+      // Arrêter la lecture actuelle avant de changer de source
+      stop(); // Assurez-vous que cette fonction réinitialise isPlaying et isPaused comme nécessaire
+    }
+    // Mettre à jour la source audio, ce qui déclenchera le useEffect pour charger et jouer la nouvelle source
+    setAudioSrc(source);
+    // La logique dans useEffect pour audioSrc devrait s'occuper de jouer la nouvelle source si isPlaying est vrai
+  };
+
   // Permet de déplacer la lecture dans la piste audio
   const controlProgression = (event) => {
     const newTime = event.target.value;
     audioRef.current.currentTime = newTime;
     setCurrentTime(newTime);
   }
+
+  console.log(dataFrequency)
+  console.log(dataFrequencyRight)
 
   return (
     <>
