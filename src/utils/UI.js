@@ -8,6 +8,6 @@ export const colorsUI = {
 export const sizesUI = {
     radius: "0.35rem",
     radiusBig: "0.45rem",
-    text: "0.85rem",
+    text: "0.78rem",
     textSmall: "0.65rem",
 }
