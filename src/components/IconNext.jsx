@@ -12,6 +12,5 @@ export default IconNext
 
 const Icon = styled.svg`
     display:inline-block;
-    font-size: 1em;
-    line-height:1;
+    height: 0.78em;
 `
