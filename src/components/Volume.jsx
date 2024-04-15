@@ -41,10 +41,10 @@ Volume.propTypes = {
 }
 
 const Wrapper = styled.div`
-    width:14rem;
-    margin:2rem auto;
+    width:calc(100% - 4.4rem);
+    margin:0.6rem 0 0.6rem 0;
     display:flex;
-    //display:none;
+    display:none;
 `
 const Mute = styled.div`
     height:1rem;
@@ -83,7 +83,7 @@ const Indicator = styled.div`
 `
 const Range = styled.span`
     position:relative;
-    width:calc(14rem - 2rem);
+    width:calc(100% - 2rem);
     & input{
         width:calc(100% - 1rem);
         margin:auto;
