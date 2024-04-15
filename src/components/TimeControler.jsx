@@ -30,7 +30,7 @@ TimeControler.propTypes = {
 
 const TimeControllerWrapper = styled.div`
     display:flex;
-    padding-bottom:0.8rem;
+    padding:0.6rem 0;
 `
 const TimeControllerBar = styled.div`
     width:calc(100% - 5rem);
@@ -44,13 +44,13 @@ const TimeControllerBar = styled.div`
         line-height:2rem;
         margin:0;
         opacity:0;
+        cursor:pointer;
     }
     & .bar-wrapper{
-        height:0.4rem;
+        height:0.2rem;
         width:100%;
         background-color:rgba(255,255,255,0.2);
         position:absolute;
-        overflow:hidden;
         border-radius:0.2rem;
         & .bar-wrapper-progression{
             position:absolute;
@@ -58,6 +58,19 @@ const TimeControllerBar = styled.div`
             height:100%;
             width:50%;
             background-color:rgba(255,255,255,1);
+            border-radius:0.2rem;
+            &::after{
+                content:"";
+                position:absolute;
+                display:block;
+                width:0.5rem;
+                height:0.5rem;
+                border-radius:50%;
+                right:0;
+                background-color:rgba(255,255,255,1);
+                top:50%;
+                transform:translate(50%,-50%);
+            }
         }
     }
 `
