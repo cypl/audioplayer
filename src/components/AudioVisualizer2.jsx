@@ -2,7 +2,7 @@ import { useRef, useEffect } from "react";
 import p5 from "p5";
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
-import { colorsUI, sizesUI } from "../utils/UI";
+import { colorsUI } from "../utils/UI";
 
 const AudioVisualizer2 = ({ dataFrequency }) => {
     const sketchRef = useRef();
@@ -17,7 +17,7 @@ const AudioVisualizer2 = ({ dataFrequency }) => {
         };
     
         p.draw = () => {
-            p.background(0, 10); // Utiliser une valeur alpha modérée pour le fond
+            p.background(30, 37, 82, 10); // Utiliser une valeur alpha modérée pour le fond "10"
             p.stroke(255);
     
             p.beginShape();
@@ -61,18 +61,17 @@ AudioVisualizer2.propTypes = {
 
 const Visualizer = styled.div`
   position: absolute;
-  width: calc(100% - 23rem);
-  aspect-ratio: 16/9;
-  right: 1rem;
-  top: 1rem;
+  width: 100vw;
+  height:100vh;
+  left: 0;
+  top: 0;
   background: ${colorsUI.background};
-  border-radius: ${sizesUI.radiusBig};
+  z-index:-1;
   & canvas {
     position: absolute;
-    // width: calc(100% - 1rem)!important;
-    // height: calc(100% - 1rem)!important;
-    top: 0.5rem;
-    left: 0.5rem;
-    border-radius:${sizesUI.radius};
+    width: 100%!important;
+    height: 100%!important;
+    left: 0;
+    top: 0;
   }
 `
