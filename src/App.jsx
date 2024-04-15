@@ -7,10 +7,10 @@ import styled from 'styled-components'
 import { colorsUI, sizesUI } from './utils/UI';
 import Button from './components/Button';
 import IconPrev from './components/IconPrev';
+import IconNext from './components/IconNext';
 import IconPlay from './components/IconPlay';
 import IconPause from './components/IconPause';
-import IconNext from './components/IconNext';
-import AudioVisualizer2 from './components/AudioVisualizer2';
+import AudioVisualizer3 from './components/AudioVisualizer3';
 
 
 // Déclaration du contexte audio à l'extérieur du composant pour qu'il soit partagé globalement
@@ -18,6 +18,7 @@ const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 
 function App() {
+  const [playerVisible, setPlayerVisible] = useState(true);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const audioRef = useRef(null);
@@ -30,15 +31,15 @@ function App() {
   const [volume, setVolume] = useState(0.8);
   // Initialiser gainNodeRef une seule fois et ne pas le recréer avec chaque source
   const gainNodeRef = useRef(audioContext.createGain());
-  const analyserNodeRef = useRef(audioContext.createAnalyser());
+  const analyserNodeRefLeft = useRef(audioContext.createAnalyser());
   const analyserNodeRefRight = useRef(audioContext.createAnalyser());
 
   const splitterRef = useRef(audioContext.createChannelSplitter(2)); // Pour un signal stéréo
 
   // Connecter gainNode au contexte audio dès le début et ne pas le déconnecter
   useEffect(() => {
-    analyserNodeRef.current.fftSize = 2048;
-    analyserNodeRefRight.current.fftSize = 2048;
+    analyserNodeRefLeft.current.fftSize = 512; // 2048 ?
+    analyserNodeRefRight.current.fftSize = 512;
   
     // Connecter le gainNode à la destination audio pour jouer le son
     gainNodeRef.current.connect(audioContext.destination);
@@ -81,7 +82,7 @@ useEffect(() => {
 
     // Connexion correcte du splitter et des analyseurs
     track.connect(splitterRef.current); // Connectez la source au splitter
-    splitterRef.current.connect(analyserNodeRef.current, 0); // Connecter le canal gauche à analyserNodeRef
+    splitterRef.current.connect(analyserNodeRefLeft.current, 0); // Connecter le canal gauche à analyserNodeRefLeft
     splitterRef.current.connect(analyserNodeRefRight.current, 1); // Connecter le canal droit à analyserNodeRefRight
 
     gainNodeRef.current.connect(audioContext.destination); // Connecter le gainNode à la destination
@@ -109,10 +110,11 @@ useEffect(() => {
   }
 
   // Gestion des données de fréquences 
-  const [dataFrequency, setDataFrequency] = useState(new Uint8Array(0));
+  const [dataFrequencyLeft, setDataFrequencyLeft] = useState(new Uint8Array(0));
   const [dataFrequencyRight, setDataFrequencyRight] = useState(new Uint8Array(0));
-  console.log("left:" + dataFrequency)
-  console.log("right:" + dataFrequencyRight)
+  // console.log("left:" + dataFrequencyLeft)
+  // console.log("right:" + dataFrequencyRight)
+
   useEffect(() => {
     let intervalId;
     
@@ -131,13 +133,13 @@ useEffect(() => {
   const updateAnalyserData = () => {
     if (!isPlaying || isPaused) return; // Arrête la mise à jour si l'audio n'est pas en cours de lecture ou est en pause
     // Signal de gauche
-    const frequencyData = new Uint8Array(analyserNodeRef.current.frequencyBinCount);
-    analyserNodeRef.current.getByteFrequencyData(frequencyData);
+    const frequencyDataLeft = new Uint8Array(analyserNodeRefLeft.current.frequencyBinCount);
+    analyserNodeRefLeft.current.getByteFrequencyData(frequencyDataLeft);
     // Signal de droite
     const frequencyDataRight = new Uint8Array(analyserNodeRefRight.current.frequencyBinCount);
     analyserNodeRefRight.current.getByteFrequencyData(frequencyDataRight);
     
-    setDataFrequency(frequencyData); // Mise à jour de l'état avec les nouvelles données
+    setDataFrequencyLeft(frequencyDataLeft); // Mise à jour de l'état avec les nouvelles données
     setDataFrequencyRight(frequencyDataRight); // Mise à jour de l'état avec les nouvelles données
   };
 
@@ -222,44 +224,95 @@ useEffect(() => {
     audioRef.current.currentTime = newTime;
     setCurrentTime(newTime);
   }
-
+  //inactive={audioSrc == null}
   return (
     <>
+    {!playerVisible && 
+      <Show onClick={() => setPlayerVisible(true)}>
+        <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 2.5C2 2.22386 2.22386 2 2.5 2H5.5C5.77614 2 6 2.22386 6 2.5C6 2.77614 5.77614 3 5.5 3H3V5.5C3 5.77614 2.77614 6 2.5 6C2.22386 6 2 5.77614 2 5.5V2.5ZM9 2.5C9 2.22386 9.22386 2 9.5 2H12.5C12.7761 2 13 2.22386 13 2.5V5.5C13 5.77614 12.7761 6 12.5 6C12.2239 6 12 5.77614 12 5.5V3H9.5C9.22386 3 9 2.77614 9 2.5ZM2.5 9C2.77614 9 3 9.22386 3 9.5V12H5.5C5.77614 12 6 12.2239 6 12.5C6 12.7761 5.77614 13 5.5 13H2.5C2.22386 13 2 12.7761 2 12.5V9.5C2 9.22386 2.22386 9 2.5 9ZM12.5 9C12.7761 9 13 9.22386 13 9.5V12.5C13 12.7761 12.7761 13 12.5 13H9.5C9.22386 13 9 12.7761 9 12.5C9 12.2239 9.22386 12 9.5 12H12V9.5C12 9.22386 12.2239 9 12.5 9Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>    
+      </Show>
+    }
+    {playerVisible && 
       <Player>
+        <Hide onClick={() => setPlayerVisible(false)}>
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.5 2C5.77614 2 6 2.22386 6 2.5V5.5C6 5.77614 5.77614 6 5.5 6H2.5C2.22386 6 2 5.77614 2 5.5C2 5.22386 2.22386 5 2.5 5H5V2.5C5 2.22386 5.22386 2 5.5 2ZM9.5 2C9.77614 2 10 2.22386 10 2.5V5H12.5C12.7761 5 13 5.22386 13 5.5C13 5.77614 12.7761 6 12.5 6H9.5C9.22386 6 9 5.77614 9 5.5V2.5C9 2.22386 9.22386 2 9.5 2ZM2 9.5C2 9.22386 2.22386 9 2.5 9H5.5C5.77614 9 6 9.22386 6 9.5V12.5C6 12.7761 5.77614 13 5.5 13C5.22386 13 5 12.7761 5 12.5V10H2.5C2.22386 10 2 9.77614 2 9.5ZM9 9.5C9 9.22386 9.22386 9 9.5 9H12.5C12.7761 9 13 9.22386 13 9.5C13 9.77614 12.7761 10 12.5 10H10V12.5C10 12.7761 9.77614 13 9.5 13C9.22386 13 9 12.7761 9 12.5V9.5Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+        </Hide>
         <ButtonsWrapper>
-          <Button inactive={!isPlaying && !isPaused} icon={<IconPrev/>}/>
-          { (!isPlaying && !isPaused || isPlaying && isPaused) && 
-            <Button inactive={audioSrc == null} action={play} icon={<IconPlay/>}/>
-          }
-          { isPlaying && !isPaused && 
-            <Button action={pause} icon={<IconPause/>}/>
-          }
-          <Button inactive={!isPlaying && !isPaused} icon={<IconNext/>}/>
+          <div> 
+            <Button inactive={!isPlaying && !isPaused} icon={<IconPrev/>}/>
+            { (!isPlaying && !isPaused || isPlaying && isPaused) && 
+              <Button action={play} icon={<IconPlay/>} centered={true}/>
+            }
+            { isPlaying && !isPaused && 
+              <Button action={pause} icon={<IconPause/>} centered={true}/>
+            }
+            <Button inactive={!isPlaying && !isPaused} icon={<IconNext/>}/>
+          </div>
+          <Volume volume={volume} setVolume={setVolume} />
         </ButtonsWrapper>
 
         <TrackTimeControler currentTime={currentTime} duration={duration} control={controlProgression} />
-        <Volume volume={volume} setVolume={setVolume} />
         <Tracklist data={tracklist} audioSrc={audioSrc} launchTrack={launchTrack}/>
       </Player>
-      <AudioVisualizer2 dataFrequency={dataFrequency}/>
+      }
+      <AudioVisualizer3 dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight}/>
+      
     </>
   );
 }
 
 export default App;
 
+const Hide = styled.div`
+  position:absolute;
+  height:1.6rem;
+  width:1.6rem;
+  left:0.5rem;
+  top:0.5rem;
+  background-color:${colorsUI.background};
+  border-radius:${sizesUI.radius};
+  border:1px solid ${colorsUI.border};
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  & svg{
+    color:${colorsUI.textInactive};
+  }
+`
+const Show = styled.div`
+  position:absolute;
+  height:1.6rem;
+  width:1.6rem;
+  left:0.5rem;
+  top:0.5rem;
+  background-color:${colorsUI.background};
+  border-radius:${sizesUI.radius};
+  border:1px solid ${colorsUI.border};
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  & svg{
+    color:${colorsUI.textInactive};
+  }
+`
 const Player = styled.div`
   position:absolute;
-  background:${colorsUI.background};
+  background:rgba(100,100,100,0.18);
   border-radius:${sizesUI.radiusBig};
+  border:1px solid ${colorsUI.border};
   width:20rem;
   padding:0.5rem;
   top:1rem;
   left:1rem;
 `
 const ButtonsWrapper = styled.div`
-  padding-bottom:0.8rem;
-  padding-top:0.8rem;
+  padding:0.8rem 0.6rem 0rem 0.6rem;
   display:flex;
   justify-content:center;
+  & div{
+    border-radius:${sizesUI.radius};
+    overflow:hidden;
+  }
 `
