@@ -10,7 +10,7 @@ import IconPrev from './components/IconPrev';
 import IconNext from './components/IconNext';
 import IconPlay from './components/IconPlay';
 import IconPause from './components/IconPause';
-import AudioVisualizer3 from './components/AudioVisualizer3';
+import AudioVisualizer4 from './components/AudioVisualizer4';
 
 
 // Déclaration du contexte audio à l'extérieur du composant pour qu'il soit partagé globalement
@@ -38,8 +38,8 @@ function App() {
 
   // Connecter gainNode au contexte audio dès le début et ne pas le déconnecter
   useEffect(() => {
-    analyserNodeRefLeft.current.fftSize = 512; // 2048 ?
-    analyserNodeRefRight.current.fftSize = 512;
+    analyserNodeRefLeft.current.fftSize = 64; // 512 ?
+    analyserNodeRefRight.current.fftSize = 64;
   
     // Connecter le gainNode à la destination audio pour jouer le son
     gainNodeRef.current.connect(audioContext.destination);
@@ -112,15 +112,13 @@ useEffect(() => {
   // Gestion des données de fréquences 
   const [dataFrequencyLeft, setDataFrequencyLeft] = useState(new Uint8Array(0));
   const [dataFrequencyRight, setDataFrequencyRight] = useState(new Uint8Array(0));
-  // console.log("left:" + dataFrequencyLeft)
-  // console.log("right:" + dataFrequencyRight)
 
   useEffect(() => {
     let intervalId;
     
     // Modifier la condition pour arrêter également lorsque isPaused est vrai
     if (isPlaying && !isPaused) {
-      intervalId = setInterval(updateAnalyserData, 100); // génère une analyse toutes les 100ms
+      intervalId = setInterval(updateAnalyserData, 80); // génère une analyse toutes les 80ms
     } else {
       // Arrêter l'intervalle si l'audio est en pause ou arrêté
       clearInterval(intervalId);
@@ -255,7 +253,7 @@ useEffect(() => {
         <Tracklist data={tracklist} audioSrc={audioSrc} launchTrack={launchTrack}/>
       </Player>
       }
-      <AudioVisualizer3 dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight}/>
+      <AudioVisualizer4 dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight}/>
       
     </>
   );
