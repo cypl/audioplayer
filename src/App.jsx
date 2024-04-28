@@ -10,7 +10,7 @@ import IconPrev from './components/IconPrev';
 import IconNext from './components/IconNext';
 import IconPlay from './components/IconPlay';
 import IconPause from './components/IconPause';
-import AudioVisualizer4 from './components/AudioVisualizer4';
+import AudioVisualizer from './components/AudioVisualizer';
 
 
 // Déclaration du contexte audio à l'extérieur du composant pour qu'il soit partagé globalement
@@ -253,7 +253,7 @@ useEffect(() => {
         <Tracklist data={tracklist} audioSrc={audioSrc} launchTrack={launchTrack}/>
       </Player>
       }
-      <AudioVisualizer4 dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight}/>
+      <AudioVisualizer dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight}/>
       
     </>
   );
