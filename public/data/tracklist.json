@@ -8,10 +8,10 @@
     },
     {
         "id":2,
-        "artist":"Tin Man",
-        "song":"Lovely Acid",
-        "source":"data/mp3/11 - Tin Man - Lovely Acid (Original Mix).mp3",
-        "duration":365.832902
+        "artist":"Cyclo",
+        "song":"C7",
+        "source":"data/mp3/Cyclo - C7.mp3",
+        "duration":317.112417
     },
     {
         "id":3,
