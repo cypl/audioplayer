@@ -118,7 +118,7 @@ useEffect(() => {
     
     // Modifier la condition pour arrêter également lorsque isPaused est vrai
     if (isPlaying && !isPaused) {
-      intervalId = setInterval(updateAnalyserData, 80); // génère une analyse toutes les 80ms
+      intervalId = setInterval(updateAnalyserData, 60); // génère une analyse toutes les 60ms
     } else {
       // Arrêter l'intervalle si l'audio est en pause ou arrêté
       clearInterval(intervalId);
@@ -184,6 +184,7 @@ useEffect(() => {
   // Gestion de la progression
   const [duration, setDuration] = useState(0); // État pour stocker la durée de la piste audio
   const [currentTime, setCurrentTime] = useState(0); // État pour la position actuelle de lecture dans la piste audio
+  // console.log(duration) // durée de la piste audio en cours
 
   // Permet de déterminer la durée de la piste audio, 
   // une fois que les métadonnées de la piste sont chargées
