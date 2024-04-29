@@ -38,8 +38,8 @@ function App() {
 
   // Connecter gainNode au contexte audio dès le début et ne pas le déconnecter
   useEffect(() => {
-    analyserNodeRefLeft.current.fftSize = 64; // 512 ?
-    analyserNodeRefRight.current.fftSize = 64;
+    analyserNodeRefLeft.current.fftSize = 4096; // 512 ?
+    analyserNodeRefRight.current.fftSize = 4096;
   
     // Connecter le gainNode à la destination audio pour jouer le son
     gainNodeRef.current.connect(audioContext.destination);
@@ -223,7 +223,7 @@ useEffect(() => {
     audioRef.current.currentTime = newTime;
     setCurrentTime(newTime);
   }
-  //inactive={audioSrc == null}
+
   return (
     <>
     {!playerVisible && 
@@ -305,6 +305,7 @@ const Player = styled.div`
   padding:0.5rem;
   top:1rem;
   left:1rem;
+  z-index:1;
 `
 const ButtonsWrapper = styled.div`
   padding:0.8rem 0.6rem 0rem 0.6rem;
