@@ -19,6 +19,8 @@ const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 function App() {
   const [playerVisible, setPlayerVisible] = useState(true);
+  const [selectedVisualizer, setSelectedVisualizer] = useState("premier");
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const audioRef = useRef(null);
@@ -252,15 +254,43 @@ useEffect(() => {
 
         <TrackTimeControler currentTime={currentTime} duration={duration} control={controlProgression} />
         <Tracklist data={tracklist} audioSrc={audioSrc} launchTrack={launchTrack}/>
+        <VisualizerSelect>
+          <span onClick={() => setSelectedVisualizer("premier")} className={selectedVisualizer === "premier" && "active"}>Visualizer 1</span>
+          <span onClick={() => setSelectedVisualizer("second")} className={selectedVisualizer === "second" && "active"}>Visualizer 2</span>
+        </VisualizerSelect>
       </Player>
       }
-      <AudioVisualizer dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight}/>
+      {selectedVisualizer === "premier" && 
+        <AudioVisualizer dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight}/>
+      }
+      {selectedVisualizer === "second" && 
+        <h1>Coucou !s</h1>
+      }
       
     </>
   );
 }
 
 export default App;
+
+const VisualizerSelect = styled.p`
+  font-size:${sizesUI.text};
+  color:${colorsUI.textInactive};
+  text-align:center;
+  & span{
+    cursor:pointer;
+    margin:0 0.25rem;
+    padding: 0.3rem 0.6rem;
+    background-color: ${colorsUI.background};
+    border-radius: ${sizesUI.radius};
+    &.active{
+      color:${colorsUI.textActive};
+    }
+    &:hover{
+      color:${colorsUI.textActive};
+    }
+  }
+`
 
 const Hide = styled.div`
   position:absolute;
