@@ -8,16 +8,31 @@
     },
     {
         "id":2,
+        "artist":"Vril",
+        "song":"Riese",
+        "source":"data/mp3/04 - Vril - Riese (Rework).mp3",
+        "duration":281.45458
+    },
+    {
+        "id":3,
         "artist":"Cyclo",
         "song":"C7",
         "source":"data/mp3/Cyclo - C7.mp3",
         "duration":317.112417
     },
     {
-        "id":3,
-        "artist":"Vril",
-        "song":"Riese",
-        "source":"data/mp3/04 - Vril - Riese (Rework).mp3",
-        "duration":281.45458
+        "id":4,
+        "artist":"Atom TM",
+        "song":"Mittlere composition no.ii",
+        "source":"data/mp3/Atom TM - mittlere composition no. ii.mp3",
+        "duration":143.828833
+    },
+    {
+        "id":5,
+        "artist":"Gilles & Mathias",
+        "song":"Le bord de la rivière",
+        "source":"data/mp3/Gilles & Mathias - le bord de la rivière.mp3",
+        "duration":325.446938
     }
+    
 ]
