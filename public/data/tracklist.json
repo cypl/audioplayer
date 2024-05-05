@@ -23,12 +23,19 @@
     {
         "id":4,
         "artist":"Atom TM",
+        "song":"Mittlere composition no.i",
+        "source":"data/mp3/Atom TM -  mittlere composition no. i.mp3",
+        "duration":127.99625
+    },
+    {
+        "id":5,
+        "artist":"Atom TM",
         "song":"Mittlere composition no.ii",
         "source":"data/mp3/Atom TM - mittlere composition no. ii.mp3",
         "duration":143.828833
     },
     {
-        "id":5,
+        "id":6,
         "artist":"Gilles & Mathias",
         "song":"Le bord de la rivière",
         "source":"data/mp3/Gilles & Mathias - le bord de la rivière.mp3",
