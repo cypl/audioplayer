@@ -11,6 +11,7 @@ import IconNext from './components/IconNext';
 import IconPlay from './components/IconPlay';
 import IconPause from './components/IconPause';
 import AudioVisualizer from './components/AudioVisualizer';
+import AudioVisualizerParticles from './components/AudioVisualizerParticules';
 
 
 // Déclaration du contexte audio à l'extérieur du composant pour qu'il soit partagé globalement
@@ -120,7 +121,7 @@ useEffect(() => {
     
     // Modifier la condition pour arrêter également lorsque isPaused est vrai
     if (isPlaying && !isPaused) {
-      intervalId = setInterval(updateAnalyserData, 60); // génère une analyse toutes les 60ms
+      intervalId = setInterval(updateAnalyserData, 20); // génère une analyse toutes les 60ms
     } else {
       // Arrêter l'intervalle si l'audio est en pause ou arrêté
       clearInterval(intervalId);
@@ -222,9 +223,11 @@ useEffect(() => {
   // Permet de déplacer la lecture dans la piste audio
   const controlProgression = (event) => {
     const newTime = event.target.value;
-    audioRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
+    audioRef.current.currentTime = +newTime;
+    setCurrentTime(+newTime);
   }
+
+
 
   return (
     <>
@@ -255,8 +258,14 @@ useEffect(() => {
         <TrackTimeControler currentTime={currentTime} duration={duration} control={controlProgression} />
         <Tracklist data={tracklist} audioSrc={audioSrc} launchTrack={launchTrack}/>
         <VisualizerSelect>
-          <span onClick={() => setSelectedVisualizer("premier")} className={selectedVisualizer === "premier" && "active"}>Visualizer 1</span>
-          <span onClick={() => setSelectedVisualizer("second")} className={selectedVisualizer === "second" && "active"}>Visualizer 2</span>
+          <span onClick={() => setSelectedVisualizer("premier")} className={selectedVisualizer === "premier" ? "active" : ""}>
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.900024 7.50002C0.900024 3.85495 3.85495 0.900024 7.50002 0.900024C11.1451 0.900024 14.1 3.85495 14.1 7.50002C14.1 11.1451 11.1451 14.1 7.50002 14.1C3.85495 14.1 0.900024 11.1451 0.900024 7.50002ZM7.50002 1.80002C4.35201 1.80002 1.80002 4.35201 1.80002 7.50002C1.80002 10.648 4.35201 13.2 7.50002 13.2C10.648 13.2 13.2 10.648 13.2 7.50002C13.2 4.35201 10.648 1.80002 7.50002 1.80002ZM3.07504 7.50002C3.07504 5.05617 5.05618 3.07502 7.50004 3.07502C9.94388 3.07502 11.925 5.05617 11.925 7.50002C11.925 9.94386 9.94388 11.925 7.50004 11.925C5.05618 11.925 3.07504 9.94386 3.07504 7.50002ZM7.50004 3.92502C5.52562 3.92502 3.92504 5.52561 3.92504 7.50002C3.92504 9.47442 5.52563 11.075 7.50004 11.075C9.47444 11.075 11.075 9.47442 11.075 7.50002C11.075 5.52561 9.47444 3.92502 7.50004 3.92502ZM7.50004 5.25002C6.2574 5.25002 5.25004 6.25739 5.25004 7.50002C5.25004 8.74266 6.2574 9.75002 7.50004 9.75002C8.74267 9.75002 9.75004 8.74266 9.75004 7.50002C9.75004 6.25738 8.74267 5.25002 7.50004 5.25002ZM6.05004 7.50002C6.05004 6.69921 6.69923 6.05002 7.50004 6.05002C8.30084 6.05002 8.95004 6.69921 8.95004 7.50002C8.95004 8.30083 8.30084 8.95002 7.50004 8.95002C6.69923 8.95002 6.05004 8.30083 6.05004 7.50002Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+            V1
+          </span>
+          <span onClick={() => setSelectedVisualizer("second")} className={selectedVisualizer === "second" ? "active" : ""}>
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.900024 7.50002C0.900024 3.85495 3.85495 0.900024 7.50002 0.900024C11.1451 0.900024 14.1 3.85495 14.1 7.50002C14.1 11.1451 11.1451 14.1 7.50002 14.1C3.85495 14.1 0.900024 11.1451 0.900024 7.50002ZM7.50002 1.80002C4.35201 1.80002 1.80002 4.35201 1.80002 7.50002C1.80002 10.648 4.35201 13.2 7.50002 13.2C10.648 13.2 13.2 10.648 13.2 7.50002C13.2 4.35201 10.648 1.80002 7.50002 1.80002ZM3.07504 7.50002C3.07504 5.05617 5.05618 3.07502 7.50004 3.07502C9.94388 3.07502 11.925 5.05617 11.925 7.50002C11.925 9.94386 9.94388 11.925 7.50004 11.925C5.05618 11.925 3.07504 9.94386 3.07504 7.50002ZM7.50004 3.92502C5.52562 3.92502 3.92504 5.52561 3.92504 7.50002C3.92504 9.47442 5.52563 11.075 7.50004 11.075C9.47444 11.075 11.075 9.47442 11.075 7.50002C11.075 5.52561 9.47444 3.92502 7.50004 3.92502ZM7.50004 5.25002C6.2574 5.25002 5.25004 6.25739 5.25004 7.50002C5.25004 8.74266 6.2574 9.75002 7.50004 9.75002C8.74267 9.75002 9.75004 8.74266 9.75004 7.50002C9.75004 6.25738 8.74267 5.25002 7.50004 5.25002ZM6.05004 7.50002C6.05004 6.69921 6.69923 6.05002 7.50004 6.05002C8.30084 6.05002 8.95004 6.69921 8.95004 7.50002C8.95004 8.30083 8.30084 8.95002 7.50004 8.95002C6.69923 8.95002 6.05004 8.30083 6.05004 7.50002Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path></svg>
+            V2
+          </span>
         </VisualizerSelect>
       </Player>
       }
@@ -264,7 +273,7 @@ useEffect(() => {
         <AudioVisualizer dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight}/>
       }
       {selectedVisualizer === "second" && 
-        <h1>Coucou !s</h1>
+        <AudioVisualizerParticles dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight}/>
       }
       
     </>
@@ -274,6 +283,7 @@ useEffect(() => {
 export default App;
 
 const VisualizerSelect = styled.p`
+  padding-top:1.2rem;
   font-size:${sizesUI.text};
   color:${colorsUI.textInactive};
   text-align:center;
@@ -282,12 +292,21 @@ const VisualizerSelect = styled.p`
     margin:0 0.25rem;
     padding: 0.3rem 0.6rem;
     background-color: ${colorsUI.background};
+    border:1px solid ${colorsUI.background};
     border-radius: ${sizesUI.radius};
     &.active{
       color:${colorsUI.textActive};
+      border:1px solid ${colorsUI.border};
     }
     &:hover{
       color:${colorsUI.textActive};
+      border:1px solid ${colorsUI.border};
+    }
+    & svg{
+      display: inline-block;
+      margin-right: 0.2rem;
+      height: 0.75rem;
+      vertical-align: -0.1rem;
     }
   }
 `
