@@ -248,7 +248,6 @@ const VisualizerPart = styled.div`
         top:0;
     }
     &.bottom{
-        //border-top:1px solid ${colorsUI.border};
         bottom:0;
     }
     & .bar-wrapper{
@@ -263,7 +262,7 @@ const VisualizerPart = styled.div`
             border-radius: 0.2vh;
             transform:scaleX(1) scaleY(1);
             opacity:0;
-            transition:0.03s transform linear, 0.03s opacity linear, , 0.03s background linear;
+            transition:0.01s transform linear, 0.01s opacity linear, , 0.01s background linear;
             & .bar-wrapper__dot{
                 height: 0.4vh;
                 width: 1vh;
@@ -272,12 +271,11 @@ const VisualizerPart = styled.div`
                 position: absolute;
                 top: 0px;
                 opacity:0;
-                transition:0.03s opacity linear;
+                transition:0.01s opacity linear;
             } 
         }
     }
     &.left{
-        //border-right:1px solid ${colorsUI.border};
         & .bar-wrapper{
             justify-content:right;
             & .bar-wrapper__line{
