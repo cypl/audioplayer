@@ -20,7 +20,7 @@ const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
 function App() {
   const [playerVisible, setPlayerVisible] = useState(true);
-  const [selectedVisualizer, setSelectedVisualizer] = useState("premier");
+  const [selectedVisualizer, setSelectedVisualizer] = useState("second");
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
