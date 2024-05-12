@@ -1,25 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import styled from 'styled-components';
-import { colorsUI } from '../utils/UI';
 import { sumThisArray, reduceSizeArray } from '../utils/arrayUtils';
+import Grid from './Grid';
 
 const barWidth = (bar) => {
     if (bar === 0) return 0.01 + "%"
     return (bar / 256) // 256 correspond à la valeur maximal d'un élément du tableau
 }
-// const progressiveOpacity = (bar) => {
-//     if (bar === 0) return 0
-//     if (bar > 0 && bar < 25) return 0.2
-//     if (bar > 25 && bar < 75) return 0.4
-//     if (bar > 75 && bar < 125) return 0.6
-//     if (bar > 125 && bar < 175) return 0.75
-//     if (bar > 175 && bar < 225) return 0.85
-//     if (bar > 225) return 1
-// }
-// const progressiveOpacity = (bar) => {
-//     return Math.min(bar / 256, 1);
-// }
+
 const progressiveOpacity = (bar) => {
     if (bar <= 0) return 0;
     if (bar >= 256) return 1;
@@ -83,7 +72,7 @@ const arrayOfColors = [
 ]
 
 
-function AudioVisualizer4({ dataFrequencyLeft, dataFrequencyRight }){
+function AudioVisualizer4({ dataFrequencyLeft, dataFrequencyRight, showGrid }){
 
     let barsCount = 42
     const barsColor = useRef("")
@@ -103,8 +92,6 @@ function AudioVisualizer4({ dataFrequencyLeft, dataFrequencyRight }){
     const barRefsRightBottom = useRef([])
     const lineRefsRightBottom = useRef([])
     const dotRefsRightBottom = useRef([])
-
-    const [grid, setGrid] = useState(false)
 
     useEffect(() => {
         const dataLeftTop = dataFormat(reduceSizeArray(dataFrequencyLeft, barsCount *2), barsCount, true);
@@ -172,15 +159,7 @@ function AudioVisualizer4({ dataFrequencyLeft, dataFrequencyRight }){
             <VisualizerPart className='bottom right' barscolor={barsColor.current}>
                 {initBars(barsCount, barRefsRightBottom, lineRefsRightBottom, dotRefsRightBottom)}
             </VisualizerPart>
-            <VisualizerGridTrigger onClick={() => setGrid(!grid)}></VisualizerGridTrigger>
-            {grid &&
-                <VisualizerGrid>
-                    <div className='grid-part top left'></div>
-                    <div className='grid-part top right'></div>
-                    <div className='grid-part bottom left'></div>
-                    <div className='grid-part bottom right'></div>
-                </VisualizerGrid>
-            }
+            {showGrid && <Grid/>}
         </Visualizer>
     )
 }
@@ -190,6 +169,7 @@ export default AudioVisualizer4
 AudioVisualizer4.propTypes = {
     dataFrequencyLeft: PropTypes.object,
     dataFrequencyRight: PropTypes.object,
+    showGrid: PropTypes.bool,
 }
 
 const Visualizer = styled.div`
@@ -200,41 +180,6 @@ const Visualizer = styled.div`
     left:50%;
     transform:translate(-50%,-50%);
     z-index:0;
-`
-const VisualizerGridTrigger = styled.div`
-    position:absolute;
-    bottom:-2.3rem;
-    left:-4.3rem;
-    height:10px;
-    width:10px;
-    border-radius:100%;
-    cursor:pointer;
-    background-color:${colorsUI.border};
-`
-const VisualizerGrid = styled.div`
-    position:absolute;
-    width:100%;
-    height:100%;
-    border:1px solid ${colorsUI.border};
-    & .grid-part{
-        width:50%;
-        height:50%;
-        position:absolute;
-        &.top{
-            top:0;
-            border-bottom:1px solid ${colorsUI.border};
-        }
-        &.bottom{
-            top:50%;
-        }
-        &.left{
-            left:0;
-        }
-        &.right{
-            left:50%;
-            border-left:1px solid ${colorsUI.border};
-        }
-    }
 `
 const VisualizerPart = styled.div`
     position:absolute;

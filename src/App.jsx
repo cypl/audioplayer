@@ -21,6 +21,7 @@ const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 function App() {
   const [playerVisible, setPlayerVisible] = useState(true);
   const [selectedVisualizer, setSelectedVisualizer] = useState("second");
+  const [grid, setGrid] = useState(false)
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -121,7 +122,7 @@ useEffect(() => {
     
     // Modifier la condition pour arrêter également lorsque isPaused est vrai
     if (isPlaying && !isPaused) {
-      intervalId = setInterval(updateAnalyserData, 20); // génère une analyse toutes les 60ms
+      intervalId = setInterval(updateAnalyserData, 10 ); // génère une analyse toutes les 20ms
     } else {
       // Arrêter l'intervalle si l'audio est en pause ou arrêté
       clearInterval(intervalId);
@@ -270,18 +271,28 @@ useEffect(() => {
       </Player>
       }
       {selectedVisualizer === "premier" && 
-        <AudioVisualizer dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight}/>
+        <AudioVisualizer dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight} showGrid={grid}/>
       }
       {selectedVisualizer === "second" && 
-        <AudioVisualizerParticles dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight}/>
+        <AudioVisualizerParticles dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight} showGrid={grid}/>
       }
-      
+      <GridTrigger onClick={() => setGrid(!grid)}></GridTrigger>
     </>
   );
 }
 
 export default App;
 
+const GridTrigger = styled.div`
+    position:absolute;
+    bottom:0.5rem;
+    left:0.5rem;
+    height:10px;
+    width:10px;
+    border-radius:100%;
+    cursor:pointer;
+    background-color:${colorsUI.border};
+`
 const VisualizerSelect = styled.p`
   padding-top:1.2rem;
   font-size:${sizesUI.text};
