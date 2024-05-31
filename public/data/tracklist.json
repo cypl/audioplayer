@@ -1,19 +1,5 @@
 [
     {
-        "id":1,
-        "artist":"JakoJako",
-        "song":"Deine Augen",
-        "source":"data/mp3/04 - JakoJako - Deine Augen (Original Mix).mp3",
-        "duration":316.85331
-    },
-    {
-        "id":2,
-        "artist":"Vril",
-        "song":"Riese",
-        "source":"data/mp3/04 - Vril - Riese (Rework).mp3",
-        "duration":281.45458
-    },
-    {
         "id":3,
         "artist":"Cyclo",
         "song":"C7",
@@ -36,10 +22,16 @@
     },
     {
         "id":6,
-        "artist":"Gilles & Mathias",
-        "song":"Le bord de la rivière",
-        "source":"data/mp3/Gilles & Mathias - le bord de la rivière.mp3",
-        "duration":325.446938
+        "artist":"Autechre",
+        "song":"Slip",
+        "source":"data/mp3/Autechre - Slip.mp3",
+        "duration":380.4915
+    },
+    {
+        "id":7,
+        "artist":"Autechre",
+        "song":"Bike",
+        "source":"data/mp3/Autechre - Bike.mp3",
+        "duration":480.13333
     }
-    
 ]
