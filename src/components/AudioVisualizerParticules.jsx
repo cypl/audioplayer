@@ -105,7 +105,7 @@ const getTranslateVariation = (current, previous, maxRatio, sizeVw, side) => {
 // Fonction pour mettre à jour l'historique
 function updateHistory(ref, newData) {
     ref.current.unshift(newData); // Ajoute au début
-    if (ref.current.length > 10) {
+    if (ref.current.length > 5) {
         ref.current.pop(); // Supprime le dernier élément si la taille dépasse 5
     }
 }
