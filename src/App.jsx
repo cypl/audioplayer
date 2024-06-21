@@ -12,8 +12,7 @@ import IconPlay from './components/IconPlay';
 import IconPause from './components/IconPause';
 import AudioVisualizer from './components/AudioVisualizer';
 import AudioVisualizerParticles from './components/AudioVisualizerParticules';
-//import AudioVisualizerParticles2 from './components/AudioVisualizerParticules2';
-import AudioVisualizerKonva from './components/AudioVisualizerKonva';
+import AudioVisualizerKonvaLines from './components/AudioVisualizerKonvaLines';
 
 
 // Déclaration du contexte audio à l'extérieur du composant pour qu'il soit partagé globalement
@@ -283,7 +282,7 @@ useEffect(() => {
         <AudioVisualizerParticles dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight} showGrid={grid}/>
       }
       {selectedVisualizer === "third" && 
-        <AudioVisualizerKonva dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight} showGrid={grid}/>
+        <AudioVisualizerKonvaLines dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight} showGrid={grid}/>
       }
       <GridTrigger onClick={() => setGrid(!grid)}></GridTrigger>
     </>
