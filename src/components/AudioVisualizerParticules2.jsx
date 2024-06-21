@@ -55,7 +55,6 @@ const AudioVisualizerKonva = ({ dataFrequencyLeft, dataFrequencyRight, showGrid 
     // on génère les données, puis les lignes principales
     const dataLeft = transformArray(dataFrequencyLeft, 0, 2048, barsCount, "normal")
     const dataRight = transformArray(dataFrequencyRight, 0, 2048, barsCount, "normal")
-
     const leftLinePoints = generateLinePoints(dataLeft, width, height, barsCount, "-", amplifier)
     const rightLinePoints = generateLinePoints(dataRight, width, height, barsCount, "+", amplifier)
 
