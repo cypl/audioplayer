@@ -182,4 +182,4 @@ const CanvasContainer = styled.div`
     background-color: #121010;
 `;
 
-export default AudioVisualizerKonva;
+export default AudioVisualizerKonvaLines;
