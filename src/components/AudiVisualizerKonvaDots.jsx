@@ -5,11 +5,13 @@ import styled from 'styled-components';
 import { transformArray } from '../utils/arrayUtils';
 import Grid from './Grid';
 
+// Fonction pour limiter une valeur entre un minimum et un maximum
 function clamp(value, min, max) {
     return Math.max(min, Math.min(value, max));
 }
 
-function smoothArray(arr, smoothingFactor = 0.1) {
+// Fonction pour lisser un tableau avec un facteur de lissage
+function smoothArray(arr, smoothingFactor = 0.05) {
     const smoothedArr = [];
     smoothedArr[0] = arr[0]; // Première valeur inchangée
     for (let i = 1; i < arr.length; i++) {
@@ -18,6 +20,23 @@ function smoothArray(arr, smoothingFactor = 0.1) {
     return smoothedArr;
 }
 
+// Fonction pour calculer une moyenne mobile sur les données brutes
+function movingAverage(arr, windowSize) {
+    let result = [];
+    for (let i = 0; i < arr.length - windowSize + 1; i++) {
+        const window = arr.slice(i, i + windowSize); // Sélectionne une fenêtre de données
+        const average = window.reduce((sum, val) => sum + val, 0) / windowSize; // Calcule la moyenne de la fenêtre
+        result.push(average);
+    }
+    return result;
+}
+
+// Fonction pour interpoler entre deux tableaux de données
+function interpolateArrays(arr1, arr2, factor) {
+    return arr1.map((val, index) => val + factor * (arr2[index] - val)); // Interpole chaque élément entre arr1 et arr2
+}
+
+// Fonction pour générer des points de cercle à partir d'un jeu de données
 function generateCirclePoints(dataSet, width, height, barsCount, symbol, amplifier, amplifierRatio) {
     const points = [];
     const halfHeight = height / 2;
@@ -32,53 +51,44 @@ function generateCirclePoints(dataSet, width, height, barsCount, symbol, amplifi
     return points;
 }
 
+// Fonction pour déterminer l'opacité d'un point en fonction de sa valeur
 function pointOpacity(pointValue) {
-    if(pointValue >= 10){
-        return 1
-    }
-    else if(pointValue < 10 && pointValue > 9){
-        return 0.9
-    }
-    else if(pointValue < 9 && pointValue > 8){
-        return 0.8
-    }
-    else if(pointValue < 8 && pointValue > 7){
-        return 0.7
-    }
-    else if(pointValue < 6 && pointValue > 5){
-        return 0.6
-    }
-    else if(pointValue < 5 && pointValue > 4){
-        return 0.5
-    }
-    else if(pointValue < 4 && pointValue > 3){
-        return 0.4
-    }
-    else if(pointValue < 3 && pointValue > 2){
-        return 0.3
-    }
-    else if(pointValue < 2 && pointValue > 1){
-        return 0.2
-    }
-    else if(pointValue < 1 && pointValue > 0){
-        return 0.1
-    }
-    else{
-        return 0
+    if (pointValue >= 10) {
+        return 1;
+    } else if (pointValue >= 9) {
+        return 0.9;
+    } else if (pointValue >= 8) {
+        return 0.8;
+    } else if (pointValue >= 7) {
+        return 0.7;
+    } else if (pointValue >= 5) {
+        return 0.6;
+    } else if (pointValue >= 4) {
+        return 0.5;
+    } else if (pointValue >= 3) {
+        return 0.4;
+    } else if (pointValue >= 2) {
+        return 0.3;
+    } else if (pointValue >= 1) {
+        return 0.2;
+    } else if (pointValue > 0) {
+        return 0.1;
+    } else {
+        return 0;
     }
 }
 
 const AudioVisualizerKonvaDots = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }) => {
     const stageRef = useRef(null);
     const dotSize = 1.6;
-    // First group
+    // Première groupe
     const barsCount = 150;
     const amplifier = 5.5;
-    // Second group
+    // Deuxième groupe
     const barsCountSecond = 150;
     const amplifierSecond = 7.5;
 
-    // Manage Canvas size
+    // Gestion de la taille du canvas
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     useEffect(() => {
         const handleResize = () => {
@@ -97,22 +107,22 @@ const AudioVisualizerKonvaDots = ({ dataFrequencyLeft, dataFrequencyRight, showG
     }, []);
     const width = dimensions.width;
     const height = dimensions.height;
-    // End manage Canvas size
+    // Fin de la gestion de la taille du canvas
 
-    // State to store previous data
+    // État pour stocker les données précédentes
     const [previousDataLeft, setPreviousDataLeft] = useState([]);
     const [previousDataRight, setPreviousDataRight] = useState([]);
-    // Second group
+    // Deuxième groupe
     const [previousDataLeftSecond, setPreviousDataLeftSecond] = useState([]);
     const [previousDataRightSecond, setPreviousDataRightSecond] = useState([]);
 
-    // Generate current data
-    const dataLeftCurrent = transformArray(dataFrequencyLeft, 50, 200, barsCount, "normal");  // max 2048
-    const dataRightCurrent = transformArray(dataFrequencyRight, 50, 200, barsCount, "normal"); // max 2048
-    const dataLeftCurrentSecond = transformArray(dataFrequencyLeft, 200, 1200, barsCountSecond, "normal");  // max 2048
-    const dataRightCurrentSecond = transformArray(dataFrequencyRight, 200, 1200, barsCountSecond, "normal"); // max 2048
+    // Générer les données actuelles
+    const dataLeftCurrent = transformArray(movingAverage(dataFrequencyLeft, 5), 50, 200, barsCount, "normal");  // max 2048
+    const dataRightCurrent = transformArray(movingAverage(dataFrequencyRight, 5), 50, 200, barsCount, "normal"); // max 2048
+    const dataLeftCurrentSecond = transformArray(movingAverage(dataFrequencyLeft, 5), 200, 1200, barsCountSecond, "normal");  // max 2048
+    const dataRightCurrentSecond = transformArray(movingAverage(dataFrequencyRight, 5), 200, 1200, barsCountSecond, "normal"); // max 2048
 
-    // Update previous data state
+    // Mettre à jour l'état des données précédentes
     useEffect(() => {
         setPreviousDataLeft(prev => [...prev.slice(-20), dataLeftCurrent]);
         setPreviousDataRight(prev => [...prev.slice(-20), dataRightCurrent]);
@@ -120,27 +130,41 @@ const AudioVisualizerKonvaDots = ({ dataFrequencyLeft, dataFrequencyRight, showG
         setPreviousDataRightSecond(prev => [...prev.slice(-20), dataRightCurrentSecond]);
     }, [dataFrequencyLeft, dataFrequencyRight]);
 
-    // Combine current and previous data
+    // Fonction pour interpoler entre les données actuelles et précédentes
+    const interpolateData = (currentData, previousData, factor = 0.05) => {
+        if (previousData.length > 0) {
+            const previous = previousData[previousData.length - 1];
+            return interpolateArrays(previous, currentData, factor);
+        }
+        return currentData;
+    };
+
+    const interpolatedDataLeft = interpolateData(dataLeftCurrent, previousDataLeft);
+    const interpolatedDataRight = interpolateData(dataRightCurrent, previousDataRight);
+    const interpolatedDataLeftSecond = interpolateData(dataLeftCurrentSecond, previousDataLeftSecond);
+    const interpolatedDataRightSecond = interpolateData(dataRightCurrentSecond, previousDataRightSecond);
+
+    // Combiner les données actuelles et interpolées
     const getDataPairs = (currentData, previousData) => {
         const ratios = currentData.map((val, i) => {
             const prevVal = previousData.length > 4 ? previousData[0][i] : val;
-            return clamp(prevVal !== 0 ? val / prevVal : 1, 0.2, 1.8); // Avoid division by zero and clamp
+            return clamp(prevVal !== 0 ? val / prevVal : 1, 0.2, 1.8); // Évite la division par zéro et limite la valeur
         });
-        
-        const smoothedRatios = smoothArray(ratios, 0.05); // Adjust the smoothing factor as needed
+
+        const smoothedRatios = smoothArray(ratios, 0.05); // Ajuste le facteur de lissage si nécessaire
 
         return currentData.map((val, i) => [val, smoothedRatios[i]]);
     };
 
-    const dataLeft = getDataPairs(dataLeftCurrent, previousDataLeft);
-    const dataRight = getDataPairs(dataRightCurrent, previousDataRight);
-    const dataLeftSecond = getDataPairs(dataLeftCurrentSecond, previousDataLeftSecond);
-    const dataRightSecond = getDataPairs(dataRightCurrentSecond, previousDataRightSecond);
+    const dataLeft = getDataPairs(interpolatedDataLeft, previousDataLeft);
+    const dataRight = getDataPairs(interpolatedDataRight, previousDataRight);
+    const dataLeftSecond = getDataPairs(interpolatedDataLeftSecond, previousDataLeftSecond);
+    const dataRightSecond = getDataPairs(interpolatedDataRightSecond, previousDataRightSecond);
 
     console.clear();
     console.log(dataLeft);
 
-    // Flatten the combined data for current and historical values
+    // Aplatir les données combinées pour les valeurs actuelles et historiques
     const dataLeftValues = dataLeft.map(pair => pair[0]);
     const dataRightValues = dataRight.map(pair => pair[0]);
     const dataLeftHistoryRatio = dataLeft.map(pair => pair[1]);
@@ -156,7 +180,7 @@ const AudioVisualizerKonvaDots = ({ dataFrequencyLeft, dataFrequencyRight, showG
     const combinedLeftPointsHistory = generateCirclePoints(combinedDataLeft, width, height, barsCount * 2, "-", amplifier, combinedDataLeftHistoryRatio);
     const combinedRightPointsHistory = generateCirclePoints(combinedDataRight, width, height, barsCount * 2, "+", amplifier, combinedDataRightHistoryRatio);
 
-    // Second group
+    // Deuxième groupe
     const dataLeftValuesSecond = dataLeftSecond.map(pair => pair[0]);
     const dataRightValuesSecond = dataRightSecond.map(pair => pair[0]);
     const dataLeftHistoryRatioSecond = dataLeftSecond.map(pair => pair[1]);
@@ -177,7 +201,6 @@ const AudioVisualizerKonvaDots = ({ dataFrequencyLeft, dataFrequencyRight, showG
             <CanvasContainer ref={stageRef}>
                 <Stage width={width} height={height}>
                     <Layer>
-                        
                         {combinedLeftPoints.map((point, index) => (
                             <Circle 
                                 key={`left-${index}`} 
@@ -220,8 +243,6 @@ const AudioVisualizerKonvaDots = ({ dataFrequencyLeft, dataFrequencyRight, showG
                                 opacity={pointOpacity(point.value)} 
                             />
                         ))}
-
-
                         {combinedLeftPointsSecond.map((point, index) => (
                             <Circle 
                                 key={`left-${index}`} 
@@ -280,14 +301,11 @@ AudioVisualizerKonvaDots.propTypes = {
 
 const CanvasContainer = styled.div`
     position: absolute;
-    // width: calc(100vw - 10rem);
-    // height: calc(100vh - 10rem);
     width:100%;
     height:100%;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    //background-color: #121010;
     background-color: #000;
 `;
 
