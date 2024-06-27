@@ -30,7 +30,7 @@ function generateLinePoints(dataSet, width, height, barsCount, symbol, amplifier
     );
 }
 
-const AudioVisualizerKonvaLines = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }) => {
+const AudioVisualizerLines = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }) => {
     const stageRef = useRef(null);
     const barsCount = 30;
     const amplifier = 5;
@@ -166,7 +166,7 @@ const AudioVisualizerKonvaLines = ({ dataFrequencyLeft, dataFrequencyRight, show
     );
 };
 
-AudioVisualizerKonvaLines.propTypes = {
+AudioVisualizerLines.propTypes = {
     dataFrequencyLeft: PropTypes.array.isRequired,
     dataFrequencyRight: PropTypes.array.isRequired,
     showGrid: PropTypes.bool,
@@ -182,4 +182,4 @@ const CanvasContainer = styled.div`
     background-color: #121010;
 `;
 
-export default AudioVisualizerKonvaLines;
+export default AudioVisualizerLines;

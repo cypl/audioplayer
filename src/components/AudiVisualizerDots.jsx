@@ -78,7 +78,7 @@ function pointOpacity(pointValue) {
     }
 }
 
-const AudioVisualizerKonvaDots = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }) => {
+const AudioVisualizerDots = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }) => {
     const stageRef = useRef(null);
     const dotSize = 1.6;
     // Première groupe
@@ -293,7 +293,7 @@ const AudioVisualizerKonvaDots = ({ dataFrequencyLeft, dataFrequencyRight, showG
     );
 };
 
-AudioVisualizerKonvaDots.propTypes = {
+AudioVisualizerDots.propTypes = {
     dataFrequencyLeft: PropTypes.array.isRequired,
     dataFrequencyRight: PropTypes.array.isRequired,
     showGrid: PropTypes.bool,
@@ -309,4 +309,4 @@ const CanvasContainer = styled.div`
     background-color: #000;
 `;
 
-export default AudioVisualizerKonvaDots;
+export default AudioVisualizerDots;
