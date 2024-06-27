@@ -33,5 +33,20 @@
         "song":"Bike",
         "source":"data/mp3/Autechre - Bike.mp3",
         "duration":480.13333
+    },
+    {
+        "id":8,
+        "artist":"JakoJako",
+        "song":"Deine Augen",
+        "source":"data/mp3/04 - JakoJako - Deine Augen (Original Mix).mp3",
+        "duration":480.13333
+    },
+    {
+        "id":9,
+        "artist":"Vril",
+        "song":"Riese",
+        "source":"data/mp3/04 - Vril - Riese (Rework).mp3",
+        "duration":480.13333
     }
+    
 ]
