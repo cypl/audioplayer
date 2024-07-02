@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Stage, Layer, Line } from 'react-konva';
 import styled from 'styled-components';
 import { transformArray } from '../utils/arrayUtils';
-import Grid from './Grid';
+import { colorsUI, sizesUI } from '../utils/UI';
 
 function clamp(value, min, max) {
     return Math.max(min, Math.min(value, max));
@@ -30,7 +30,7 @@ function generateLinePoints(dataSet, width, height, barsCount, symbol, amplifier
     );
 }
 
-const AudioVisualizerLines = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }) => {
+const AudioVisualizerLines = ({ dataFrequencyLeft, dataFrequencyRight }) => {
     const stageRef = useRef(null);
     const barsCount = 30;
     const amplifier = 5;
@@ -161,7 +161,6 @@ const AudioVisualizerLines = ({ dataFrequencyLeft, dataFrequencyRight, showGrid 
                     </Layer>
                 </Stage>
             </CanvasContainer>
-            {showGrid && <Grid />}
         </>
     );
 };
@@ -169,17 +168,18 @@ const AudioVisualizerLines = ({ dataFrequencyLeft, dataFrequencyRight, showGrid 
 AudioVisualizerLines.propTypes = {
     dataFrequencyLeft: PropTypes.array.isRequired,
     dataFrequencyRight: PropTypes.array.isRequired,
-    showGrid: PropTypes.bool,
 };
 
 const CanvasContainer = styled.div`
     position: absolute;
-    width: calc(100vw - 10rem);
-    height: calc(100vh - 10rem);
+    width:calc(100% - 5rem);
+    height:calc(100% - 5rem);
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: #121010;
+    background-color: #000;
+    border:1px solid ${colorsUI.border};
+    border-radius:${sizesUI.radius};
 `;
 
 export default AudioVisualizerLines;
