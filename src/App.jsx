@@ -21,7 +21,6 @@ const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 function App() {
   const [playerVisible, setPlayerVisible] = useState(true);
   const [selectedVisualizer, setSelectedVisualizer] = useState("dots");
-  const [grid, setGrid] = useState(false)
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -271,29 +270,17 @@ useEffect(() => {
       </Player>
       }
       {selectedVisualizer === "lines" && 
-        <AudioVisualizerLines dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight} showGrid={grid}/>
+        <AudioVisualizerLines dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight}/>
       }
       {selectedVisualizer === "dots" && 
-        <AudioVisualizerDots dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight} showGrid={grid}/>
+        <AudioVisualizerDots dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight}/>
       }
-      
-      <GridTrigger onClick={() => setGrid(!grid)}></GridTrigger>
     </>
   );
 }
 
 export default App;
 
-const GridTrigger = styled.div`
-    position:absolute;
-    bottom:0.5rem;
-    left:0.5rem;
-    height:10px;
-    width:10px;
-    border-radius:100%;
-    cursor:pointer;
-    background-color:${colorsUI.border};
-`
 const VisualizerSelect = styled.p`
   padding-top:1.2rem;
   font-size:${sizesUI.text};
