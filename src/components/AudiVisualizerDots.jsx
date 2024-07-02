@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { Stage, Layer, Circle } from 'react-konva';
 import styled from 'styled-components';
 import { transformArray } from '../utils/arrayUtils';
-import Grid from './Grid';
+import { colorsUI, sizesUI } from '../utils/UI';
 
 // Fonction pour limiter une valeur entre un minimum et un maximum
 function clamp(value, min, max) {
@@ -55,38 +55,48 @@ function generateCirclePoints(dataSet, width, height, barsCount, symbol, amplifi
 function pointOpacity(pointValue) {
     if (pointValue >= 10) {
         return 1;
-    } else if (pointValue >= 9) {
-        return 0.9;
-    } else if (pointValue >= 8) {
-        return 0.8;
-    } else if (pointValue >= 7) {
-        return 0.7;
-    } else if (pointValue >= 5) {
-        return 0.6;
-    } else if (pointValue >= 4) {
-        return 0.5;
-    } else if (pointValue >= 3) {
-        return 0.4;
-    } else if (pointValue >= 2) {
-        return 0.3;
-    } else if (pointValue >= 1) {
-        return 0.2;
     } else if (pointValue > 0) {
-        return 0.1;
+        return 0.05 + (pointValue / 10) * 0.9;
     } else {
         return 0;
     }
 }
 
-const AudioVisualizerDots = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }) => {
+function generateHslaColor(baseHue, limitHue, variation, alpha) {
+    // S'assurer que la variation est entre 0 et 100
+    if (variation < 0) variation = 0;
+    if (variation > 100) variation = 100;
+  
+    // Ramener limitHue dans la plage de 0 à 360
+    limitHue = ((limitHue % 360) + 360) % 360;
+  
+    let newHue;
+    if (limitHue >= baseHue) {
+      // Cas simple : limitHue est supérieur ou égal à baseHue
+      newHue = baseHue + (limitHue - baseHue) * (variation / 100);
+    } else {
+      // Cas de rotation : limitHue est inférieur à baseHue
+      newHue = baseHue + (limitHue + 360 - baseHue) * (variation / 100);
+      // Ramener newHue dans la plage de 0 à 360
+      newHue = newHue % 360;
+    }
+  
+    // Générer la chaîne de caractères HSLA avec la nouvelle teinte et l'alpha
+    return `hsla(${newHue}, 90%, 61%, ${alpha})`;
+}
+
+const AudioVisualizerDots = ({ dataFrequencyLeft, dataFrequencyRight }) => {
     const stageRef = useRef(null);
-    const dotSize = 1.6;
+    const dotSize = 1.2;
     // Première groupe
     const barsCount = 150;
-    const amplifier = 5.5;
+    const amplifier = 4.5;
     // Deuxième groupe
     const barsCountSecond = 150;
-    const amplifierSecond = 7.5;
+    const amplifierSecond = 6.5;
+    // Troisième groupe
+    const barsCountThird = 150;
+    const amplifierThird = 6.5;
 
     // Gestion de la taille du canvas
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -115,12 +125,17 @@ const AudioVisualizerDots = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }
     // Deuxième groupe
     const [previousDataLeftSecond, setPreviousDataLeftSecond] = useState([]);
     const [previousDataRightSecond, setPreviousDataRightSecond] = useState([]);
+    // Troisième groupe
+    const [previousDataLeftThird, setPreviousDataLeftThird] = useState([]);
+    const [previousDataRightThird, setPreviousDataRightThird] = useState([]);
 
     // Générer les données actuelles
-    const dataLeftCurrent = transformArray(movingAverage(dataFrequencyLeft, 5), 50, 200, barsCount, "normal");  // max 2048
-    const dataRightCurrent = transformArray(movingAverage(dataFrequencyRight, 5), 50, 200, barsCount, "normal"); // max 2048
-    const dataLeftCurrentSecond = transformArray(movingAverage(dataFrequencyLeft, 5), 200, 1200, barsCountSecond, "normal");  // max 2048
-    const dataRightCurrentSecond = transformArray(movingAverage(dataFrequencyRight, 5), 200, 1200, barsCountSecond, "normal"); // max 2048
+    const dataLeftCurrent = transformArray(movingAverage(dataFrequencyLeft, 20), 50, 200, barsCount, "normal");  // max 2048
+    const dataRightCurrent = transformArray(movingAverage(dataFrequencyRight, 20), 50, 200, barsCount, "normal"); // max 2048
+    const dataLeftCurrentSecond = transformArray(movingAverage(dataFrequencyLeft, 40), 200, 600, barsCountSecond, "normal");  // max 2048
+    const dataRightCurrentSecond = transformArray(movingAverage(dataFrequencyRight, 40), 200, 600, barsCountSecond, "normal"); // max 2048
+    const dataLeftCurrentThird = transformArray(movingAverage(dataFrequencyLeft, 60), 600, 1600, barsCountThird, "normal");  // max 2048
+    const dataRightCurrentThird = transformArray(movingAverage(dataFrequencyRight, 60), 600, 1600, barsCountThird, "normal"); // max 2048
 
     // Mettre à jour l'état des données précédentes
     useEffect(() => {
@@ -128,6 +143,8 @@ const AudioVisualizerDots = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }
         setPreviousDataRight(prev => [...prev.slice(-20), dataRightCurrent]);
         setPreviousDataLeftSecond(prev => [...prev.slice(-20), dataLeftCurrentSecond]);
         setPreviousDataRightSecond(prev => [...prev.slice(-20), dataRightCurrentSecond]);
+        setPreviousDataLeftThird(prev => [...prev.slice(-20), dataLeftCurrentThird]);
+        setPreviousDataRightThird(prev => [...prev.slice(-20), dataRightCurrentThird]);
     }, [dataFrequencyLeft, dataFrequencyRight]);
 
     // Fonction pour interpoler entre les données actuelles et précédentes
@@ -143,6 +160,8 @@ const AudioVisualizerDots = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }
     const interpolatedDataRight = interpolateData(dataRightCurrent, previousDataRight);
     const interpolatedDataLeftSecond = interpolateData(dataLeftCurrentSecond, previousDataLeftSecond);
     const interpolatedDataRightSecond = interpolateData(dataRightCurrentSecond, previousDataRightSecond);
+    const interpolatedDataLeftThird = interpolateData(dataLeftCurrentThird, previousDataLeftThird);
+    const interpolatedDataRightThird = interpolateData(dataRightCurrentThird, previousDataRightThird);
 
     // Combiner les données actuelles et interpolées
     const getDataPairs = (currentData, previousData) => {
@@ -160,6 +179,8 @@ const AudioVisualizerDots = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }
     const dataRight = getDataPairs(interpolatedDataRight, previousDataRight);
     const dataLeftSecond = getDataPairs(interpolatedDataLeftSecond, previousDataLeftSecond);
     const dataRightSecond = getDataPairs(interpolatedDataRightSecond, previousDataRightSecond);
+    const dataLeftThird = getDataPairs(interpolatedDataLeftThird, previousDataLeftThird);
+    const dataRightThird = getDataPairs(interpolatedDataRightThird, previousDataRightThird);
 
     console.clear();
     console.log(dataLeft);
@@ -196,29 +217,47 @@ const AudioVisualizerDots = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }
     const combinedLeftPointsHistorySecond = generateCirclePoints(combinedDataLeftSecond, width, height, barsCountSecond * 2, "-", amplifierSecond, combinedDataLeftHistoryRatioSecond);
     const combinedRightPointsHistorySecond = generateCirclePoints(combinedDataRightSecond, width, height, barsCountSecond * 2, "+", amplifierSecond, combinedDataRightHistoryRatioSecond);
 
+    // Troisième groupe
+    const dataLeftValuesThird = dataLeftThird.map(pair => pair[0]);
+    const dataRightValuesThird = dataRightThird.map(pair => pair[0]);
+    const dataLeftHistoryRatioThird = dataLeftThird.map(pair => pair[1]);
+    const dataRightHistoryRatioThird = dataRightThird.map(pair => pair[1]);
+
+    const combinedDataLeftThird = [...dataLeftValuesThird.reverse(), ...dataLeftValuesThird.reverse()];
+    const combinedDataRightThird = [...dataRightValuesThird.reverse(), ...dataRightValuesThird.reverse()];
+    const combinedDataLeftHistoryRatioThird = [...dataLeftHistoryRatioThird.reverse(), ...dataLeftHistoryRatioThird.reverse()];
+    const combinedDataRightHistoryRatioThird = [...dataRightHistoryRatioThird.reverse(), ...dataRightHistoryRatioThird.reverse()];
+
+    const combinedLeftPointsThird = generateCirclePoints(combinedDataLeftThird, width, height, barsCountThird * 2, "-", amplifierThird, Array(barsCountThird * 2).fill(1));
+    const combinedRightPointsThird = generateCirclePoints(combinedDataRightThird, width, height, barsCountThird * 2, "+", amplifierThird, Array(barsCountThird * 2).fill(1));
+    const combinedLeftPointsHistoryThird = generateCirclePoints(combinedDataLeftThird, width, height, barsCountThird * 2, "-", amplifierThird, combinedDataLeftHistoryRatioThird);
+    const combinedRightPointsHistoryThird = generateCirclePoints(combinedDataRightThird, width, height, barsCountThird * 2, "+", amplifierThird, combinedDataRightHistoryRatioThird);
+
     return (
         <>
             <CanvasContainer ref={stageRef}>
                 <Stage width={width} height={height}>
                     <Layer>
+
+                        {/* Premier groupe */}
+                        
                         {combinedLeftPoints.map((point, index) => (
                             <Circle 
                                 key={`left-${index}`} 
                                 x={point.x} 
                                 y={point.y} 
                                 radius={dotSize} 
-                                fill="rgba(126, 66, 245,1)" 
+                                fill={generateHslaColor(260, 400, point.value, 1)} 
                                 opacity={pointOpacity(point.value)} 
                             />
                         ))}
-                        {/* history points */}
                         {combinedLeftPointsHistory.map((point, index) => (
                             <Circle 
                                 key={`left-history-${index}`} 
                                 x={point.x} 
                                 y={point.y} 
                                 radius={dotSize} 
-                                fill="rgba(126, 66, 245,0.5)" 
+                                fill={generateHslaColor(260, 400, point.value, 0.5)}  
                                 opacity={pointOpacity(point.value)} 
                             />
                         ))}
@@ -228,28 +267,30 @@ const AudioVisualizerDots = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }
                                 x={point.x} 
                                 y={point.y} 
                                 radius={dotSize} 
-                                fill="rgba(126, 66, 245,1)" 
+                                fill={generateHslaColor(260, 400, point.value, 1)}
                                 opacity={pointOpacity(point.value)} 
                             />
                         ))}
-                        {/* history points */}
                         {combinedRightPointsHistory.map((point, index) => (
                             <Circle 
                                 key={`right-history-${index}`} 
                                 x={point.x} 
                                 y={point.y} 
                                 radius={dotSize} 
-                                fill="rgba(126, 66, 245,0.5)" 
+                                fill={generateHslaColor(260, 400, point.value, 0.5)} 
                                 opacity={pointOpacity(point.value)} 
                             />
                         ))}
+
+                        {/* Deuxième groupe */}
+
                         {combinedLeftPointsSecond.map((point, index) => (
                             <Circle 
                                 key={`left-${index}`} 
                                 x={point.x} 
                                 y={point.y} 
                                 radius={dotSize} 
-                                fill="rgba(66,135,245,1)" 
+                                fill={generateHslaColor(260, 400, point.value, 1)} 
                                 opacity={pointOpacity(point.value)} 
                             />
                         ))}
@@ -260,7 +301,7 @@ const AudioVisualizerDots = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }
                                 x={point.x} 
                                 y={point.y} 
                                 radius={dotSize} 
-                                fill="rgba(66,135,245,0.5)" 
+                                fill={generateHslaColor(260, 400, point.value, 0.5)} 
                                 opacity={pointOpacity(point.value)} 
                             />
                         ))}
@@ -270,7 +311,7 @@ const AudioVisualizerDots = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }
                                 x={point.x} 
                                 y={point.y} 
                                 radius={dotSize} 
-                                fill="rgba(66,135,245,1)" 
+                                fill={generateHslaColor(260, 400, point.value, 1)} 
                                 opacity={pointOpacity(point.value)}  
                             />
                         ))}
@@ -281,14 +322,60 @@ const AudioVisualizerDots = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }
                                 x={point.x} 
                                 y={point.y} 
                                 radius={dotSize} 
-                                fill="rgba(66,135,245,0.5)" 
+                                fill={generateHslaColor(260, 400, point.value, 0.5)} 
                                 opacity={pointOpacity(point.value)} 
                             />
                         ))}
+
+                        {/* Troisième groupe */}
+
+                        {combinedLeftPointsThird.map((point, index) => (
+                            <Circle 
+                                key={`left-${index}`} 
+                                x={point.x} 
+                                y={point.y} 
+                                radius={dotSize} 
+                                fill={generateHslaColor(260, 400, point.value, 1)} 
+                                opacity={pointOpacity(point.value)} 
+                            />
+                        ))}
+                        {/* history points */}
+                        {combinedLeftPointsHistoryThird.map((point, index) => (
+                            <Circle 
+                                key={`left-history-${index}`} 
+                                x={point.x} 
+                                y={point.y} 
+                                radius={dotSize} 
+                                fill={generateHslaColor(260, 400, point.value, 0.5)} 
+                                opacity={pointOpacity(point.value)} 
+                            />
+                        ))}
+                        {combinedRightPointsThird.map((point, index) => (
+                            <Circle 
+                                key={`right-${index}`} 
+                                x={point.x} 
+                                y={point.y} 
+                                radius={dotSize} 
+                                fill={generateHslaColor(260, 400, point.value, 1)} 
+                                opacity={pointOpacity(point.value)}  
+                            />
+                        ))}
+                        {/* history points */}
+                        {combinedRightPointsHistoryThird.map((point, index) => (
+                            <Circle 
+                                key={`right-history-${index}`} 
+                                x={point.x} 
+                                y={point.y} 
+                                radius={dotSize} 
+                                fill={generateHslaColor(260, 400, point.value, 0.5)} 
+                                opacity={pointOpacity(point.value)} 
+                            />
+                        ))}
+
+
                     </Layer>
                 </Stage>
             </CanvasContainer>
-            {showGrid && <Grid />}
         </>
     );
 };
@@ -296,17 +383,18 @@ const AudioVisualizerDots = ({ dataFrequencyLeft, dataFrequencyRight, showGrid }
 AudioVisualizerDots.propTypes = {
     dataFrequencyLeft: PropTypes.array.isRequired,
     dataFrequencyRight: PropTypes.array.isRequired,
-    showGrid: PropTypes.bool,
 };
 
 const CanvasContainer = styled.div`
     position: absolute;
-    width:100%;
-    height:100%;
+    width:calc(100% - 5rem);
+    height:calc(100% - 5rem);
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     background-color: #000;
+    border:1px solid ${colorsUI.border};
+    border-radius:${sizesUI.radius};
 `;
 
 export default AudioVisualizerDots;
