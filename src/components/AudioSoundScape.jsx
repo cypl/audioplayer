@@ -19,12 +19,12 @@ function movingAverage(arr, windowSize) {
 // Fonction pour générer des points de cercle à partir d'un jeu de données
 function generateCirclePoints(dataSet, width, height, barsCount, amplifier, pointRadius) {
     const points = [];
-    const baseHeight = height - pointRadius; // Ajuster pour le rayon du point
-    const effectiveWidth = width - 2 * pointRadius; // Largeur effective pour les points
+    const baseHeight = height / 2; // Le milieu du canvas
+    const effectiveWidth = width - 2 * pointRadius;
 
     dataSet.forEach((val, i) => {
-        const x = pointRadius + (i / (barsCount - 1)) * effectiveWidth; // Ajuster pour le rayon du point
-        const y = Math.max(pointRadius, Math.min(baseHeight - val * amplifier, baseHeight)); // Limiter y entre pointRadius et baseHeight
+        const x = pointRadius + (i / (barsCount - 1)) * effectiveWidth;
+        const y = baseHeight - val * amplifier; // Permettre aux points de sortir du canvas
         points.push({ x, y, value: val });
     });
 
@@ -34,11 +34,12 @@ function generateCirclePoints(dataSet, width, height, barsCount, amplifier, poin
 const generateLinePoints = (dataSet, width, height, barsCount, amplifier, pointRadius) => {
     const points = [];
     const effectiveWidth = width - 2 * pointRadius;
+    const baseHeight = height / 2; // Le milieu du canvas
 
     dataSet.forEach((val, i) => {
         const x = pointRadius + (i / (barsCount - 1)) * effectiveWidth;
-        const y1 = height; // Point de départ en bas
-        const y2 = Math.max(pointRadius, Math.min(height - val * amplifier, height)); // Point d'arrivée, même calcul que pour les cercles
+        const y1 = baseHeight;
+        const y2 = baseHeight - val * amplifier; // Permettre aux lignes de sortir du canvas
         points.push({ x, y1, y2, value: val });
     });
 
@@ -119,8 +120,8 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
 
     // Générer les données actuelles
     // Premier groupe
-    const dataLeftCurrent = transformArray(movingAverage(dataFrequencyLeft, 60), 10, 1850, barsCount, "normal");  // max 2048
-    const dataRightCurrent = transformArray(movingAverage(dataFrequencyRight, 60), 10, 1850, barsCount, "reverse"); // max 2048
+    const dataLeftCurrent = transformArray(movingAverage(dataFrequencyLeft, 40), 10, 1850, barsCount, "normal");  // max 2048
+    const dataRightCurrent = transformArray(movingAverage(dataFrequencyRight, 40), 10, 1850, barsCount, "reverse"); // max 2048
     
     // Mettre à jour l'état des données précédentes 
     useEffect(() => {
@@ -157,38 +158,15 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
 
     const linePoints = generateLinePoints(dataLeftProcessed[0], width, height, barsCount, amplifier, pointRadius);
     const pointsCurrent = generatePoints(dataLeftProcessed[0]);
-    // const pointsPrev1 = generatePoints(dataLeftProcessed[2]);
-    // const pointsPrev2 = generatePoints(dataLeftProcessed[4]);
-    // const pointsPrev3 = generatePoints(dataLeftProcessed[6]);
-    // const pointsPrev4 = generatePoints(dataLeftProcessed[8]);
-    // const pointsPrev5 = generatePoints(dataLeftProcessed[10]);
-    // const pointsPrev6 = generatePoints(dataLeftProcessed[12]);
-    // const pointsPrev7 = generatePoints(dataLeftProcessed[14]);
-    // const pointsPrev8 = generatePoints(dataLeftProcessed[16]);
-    // const pointsPrev9 = generatePoints(dataLeftProcessed[18]);
-    // const pointsPrev10 = generatePoints(dataLeftProcessed[20]);
-    // const pointsPrev11 = generatePoints(dataLeftProcessed[22]);
-    // const pointsPrev12 = generatePoints(dataLeftProcessed[24]);
-    // const pointsPrev13 = generatePoints(dataLeftProcessed[26]);
-    // const pointsPrev14 = generatePoints(dataLeftProcessed[28]);
-    // const pointsPrev15 = generatePoints(dataLeftProcessed[30]);
-    // const pointsPrev16 = generatePoints(dataLeftProcessed[32]);
-    // const pointsPrev17 = generatePoints(dataLeftProcessed[34]);
-    // const pointsPrev18 = generatePoints(dataLeftProcessed[36]);
-    // const pointsPrev19 = generatePoints(dataLeftProcessed[38]);
-    // const pointsPrev20 = generatePoints(dataLeftProcessed[40]);
+    
 
     const generateHistoricalPoints = (dataProcessed, count, generatePoints, width, height, barsCount, amplifier, pointRadius) => {
         const historicalPoints = [];
         for (let i = 0; i < count; i++) {
-            // Utiliser un pas plus petit pour rapprocher les historiques
             const points = generatePoints(dataProcessed[i], width, height, barsCount, amplifier, pointRadius);
             
-            // Ajuster l'offset pour un espacement plus serré
-            const offset = i * 7; 
-            
-            // Ajuster l'opacité pour qu'elle décroisse de manière plus graduelle
-            const opacity = Math.max(0, 1 - (i * 0.025)); // 0.025 au lieu de 0.045 pour une décroissance plus lente
+            const offset = i * 7; // Réduire l'offset pour s'adapter à la moitié supérieure
+            const opacity = Math.max(0, 1 - (i * 0.025));
             
             historicalPoints.push({ points, offset, opacity });
         }
@@ -215,22 +193,34 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
                     </Layer>
                                         
                     
-                    {/* Couches historiques */}
                     {historicalPoints.map((layer, layerIndex) => (
-                        <Layer key={`layer-${layerIndex}`}>
-                            {layer.points.map((point, index) => (
-                                <Circle 
-                                    key={`point-${layerIndex}-${index}`}
-                                    x={point.x}
-                                    y={point.y - layer.offset}
-                                    radius={pointRadius}
-                                    fill={generateHslaColor(260, 450, point.value, 1)}
-                                    opacity={layer.opacity}
-                                />
-                            ))}
-                        </Layer>
-                    ))}
+                    <Layer key={`layer-${layerIndex}`}>
+                        {layer.points.map((point, index) => (
+                            <Circle 
+                                key={`point-${layerIndex}-${index}`}
+                                x={point.x}
+                                y={point.y - layer.offset} // Permettre aux points de sortir du haut du canvas
+                                radius={pointRadius}
+                                fill={generateHslaColor(260, 450, point.value, 1)}
+                                opacity={layer.opacity}
+                            />
+                        ))}
+                    </Layer>
+                ))}
 
+
+                    {/* Couche de lignes */}
+                    <Layer>
+                        {linePoints.map((point, index) => (
+                            <Line
+                                key={`line-${index}`}
+                                points={[point.x, point.y1, point.x, point.y2]}
+                                stroke={"#000"}
+                                strokeWidth={pointRadius * 2}
+                            />
+                        ))}
+                    </Layer>
+                    
                     {/* Couche actuelle */}
                     <Layer>
                         {pointsCurrent.map((point, index) => (
@@ -245,17 +235,7 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
                         ))}
                     </Layer>
 
-                    {/* Couche de lignes */}
-                    <Layer>
-                        {linePoints.map((point, index) => (
-                            <Line
-                                key={`line-${index}`}
-                                points={[point.x, point.y1, point.x, point.y2]}
-                                stroke={"#000"}
-                                strokeWidth={pointRadius * 2}
-                            />
-                        ))}
-                    </Layer>
+                    
 
                 </Stage>
             </CanvasContainer>
