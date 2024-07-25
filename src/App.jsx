@@ -10,10 +10,9 @@ import IconPrev from './components/IconPrev';
 import IconNext from './components/IconNext';
 import IconPlay from './components/IconPlay';
 import IconPause from './components/IconPause';
-import AudioVisualizerLines from './components/AudioVisualizerLines';
-import AudioVisualizerDots from './components/AudiVisualizerDots';
 import AudioVisualizerDots2 from './components/AudioVisualizerDots2';
-import AudioSoundScape from './components/AudioSoundScape';
+import AudioSoundScapeMono from './components/AudioSoundScapeMono';
+import AudioAttractorMono from './components/AudioAttractorMono';
 
 
 // Déclaration du contexte audio à l'extérieur du composant pour qu'il soit partagé globalement
@@ -38,13 +37,15 @@ function App() {
   const gainNodeRef = useRef(audioContext.createGain());
   const analyserNodeRefLeft = useRef(audioContext.createAnalyser());
   const analyserNodeRefRight = useRef(audioContext.createAnalyser());
+  const analyserNodeRefMono = useRef(audioContext.createAnalyser());
 
   const splitterRef = useRef(audioContext.createChannelSplitter(2)); // Pour un signal stéréo
 
   // Connecter gainNode au contexte audio dès le début et ne pas le déconnecter
   useEffect(() => {
-    analyserNodeRefLeft.current.fftSize = 4096; // 512 ?
+    analyserNodeRefLeft.current.fftSize = 4096; 
     analyserNodeRefRight.current.fftSize = 4096;
+    analyserNodeRefMono.current.fftSize = 4096;
   
     // Connecter le gainNode à la destination audio pour jouer le son
     gainNodeRef.current.connect(audioContext.destination);
@@ -52,9 +53,7 @@ function App() {
     // Connecter le gainNode au splitter pour analyser les canaux séparément
     gainNodeRef.current.connect(splitterRef.current); 
     
-    // Connecter le splitter aux AnalyserNodes pour les canaux gauche et droit
-    //splitterRef.current.connect(analyserNodeRef.current, 0); // Canal gauche
-    //splitterRef.current.connect(analyserNodeRefRight.current, 1); // Canal droit
+    gainNodeRef.current.connect(analyserNodeRefMono.current);
   
     // Logique de nettoyage
     return () => {
@@ -117,6 +116,7 @@ useEffect(() => {
   // Gestion des données de fréquences 
   const [dataFrequencyLeft, setDataFrequencyLeft] = useState(new Uint8Array(0));
   const [dataFrequencyRight, setDataFrequencyRight] = useState(new Uint8Array(0));
+  const [dataFrequencyMono, setDataFrequencyMono] = useState(new Uint8Array(0));
 
   useEffect(() => {
     let intervalId;
@@ -141,9 +141,13 @@ useEffect(() => {
     // Signal de droite
     const frequencyDataRight = new Uint8Array(analyserNodeRefRight.current.frequencyBinCount);
     analyserNodeRefRight.current.getByteFrequencyData(frequencyDataRight);
-    
-    setDataFrequencyLeft(frequencyDataLeft); // Mise à jour de l'état avec les nouvelles données
-    setDataFrequencyRight(frequencyDataRight); // Mise à jour de l'état avec les nouvelles données
+    // Signal mono (moyenne des signaux gauche et droit)
+    const frequencyDataMono = new Uint8Array(analyserNodeRefMono.current.frequencyBinCount);
+    analyserNodeRefMono.current.getByteFrequencyData(frequencyDataMono);
+    // Mise à jour avec les nouvelles données
+    setDataFrequencyLeft(frequencyDataLeft); 
+    setDataFrequencyRight(frequencyDataRight); 
+    setDataFrequencyMono(frequencyDataMono);
   };
 
   // Permet de lancer la lecture de la piste audio
@@ -275,7 +279,8 @@ useEffect(() => {
         <AudioVisualizerDots2 dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight}/>
       }
       {selectedVisualizer === "scape" && 
-        <AudioSoundScape dataFrequencyLeft={dataFrequencyLeft} dataFrequencyRight={dataFrequencyRight}/>
+        <AudioSoundScapeMono dataFrequencyMono={dataFrequencyMono}/>
+        // <AudioAttractorMono dataFrequencyMono={dataFrequencyMono}/>
       }
     </>
   );

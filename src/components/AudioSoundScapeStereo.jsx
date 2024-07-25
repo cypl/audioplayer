@@ -17,32 +17,42 @@ function movingAverage(arr, windowSize) {
 }
 
 // Fonction pour générer des points de cercle à partir d'un jeu de données
-function generateCirclePoints(dataSet, width, height, barsCount, amplifier, pointRadius) {
+function generateCirclePoints(dataSet, width, height, barsCount, amplifier, pointRadius, isUpperHalf) {
     const points = [];
-    const baseHeight = height - pointRadius; // Ajuster pour le rayon du point
-    const effectiveWidth = width - 2 * pointRadius; // Largeur effective pour les points
+    const baseHeight = height / 2; // Le milieu du canvas
+    const effectiveWidth = width - 2 * pointRadius;
 
     dataSet.forEach((val, i) => {
-        const x = pointRadius + (i / (barsCount - 1)) * effectiveWidth; // Ajuster pour le rayon du point
-        const y = Math.max(pointRadius, Math.min(baseHeight - val * amplifier, baseHeight)); // Limiter y entre pointRadius et baseHeight
+        const x = pointRadius + (i / (barsCount - 1)) * effectiveWidth;
+        const y = isUpperHalf 
+            ? baseHeight - val * amplifier
+            : baseHeight + val * amplifier; // Symétrie pour la partie inférieure
         points.push({ x, y, value: val });
     });
 
     return points;
 }
 
-const generateLinePoints = (dataSet, width, height, barsCount, amplifier, pointRadius) => {
+const generateLinePoints = (dataSet, width, height, barsCount, amplifier, pointRadius, isUpperHalf) => {
     const points = [];
     const effectiveWidth = width - 2 * pointRadius;
+    const baseHeight = height / 2; // Le milieu du canvas
 
     dataSet.forEach((val, i) => {
         const x = pointRadius + (i / (barsCount - 1)) * effectiveWidth;
-        const y1 = height; // Point de départ en bas
-        const y2 = Math.max(pointRadius, Math.min(height - val * amplifier, height)); // Point d'arrivée, même calcul que pour les cercles
+        const y1 = baseHeight;
+        const y2 = isUpperHalf 
+            ? baseHeight - val * amplifier
+            : baseHeight + val * amplifier; // Symétrie pour la partie inférieure
         points.push({ x, y1, y2, value: val });
     });
 
     return points;
+};
+
+// Générer les points pour différentes couches
+const generatePoints = (data) => {
+    return generateCirclePoints(data, width, height, barsCount, amplifier, pointRadius);
 };
 
 // Fonction pour déterminer l'opacité d'un point en fonction de sa valeur
@@ -79,11 +89,11 @@ function generateHslaColor(baseHue, limitHue, variation, alpha) {
     return `hsla(${newHue}, 90%, 61%, ${alpha})`;
 }
 
-const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
+const AudioSoundScapeStereo = ({ dataFrequencyLeft, dataFrequencyRight }) => {
     const stageRef = useRef(null);
     // Première groupe
-    const barsCount = 150;
-    const history = 81;
+    const barsCount = 130;
+    const history = 40;
     const pointRadius = 1.4; // le rayon des points ici
 
     // Gestion de la taille du canvas
@@ -119,8 +129,8 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
 
     // Générer les données actuelles
     // Premier groupe
-    const dataLeftCurrent = transformArray(movingAverage(dataFrequencyLeft, 60), 10, 1850, barsCount, "normal");  // max 2048
-    const dataRightCurrent = transformArray(movingAverage(dataFrequencyRight, 60), 10, 1850, barsCount, "reverse"); // max 2048
+    const dataLeftCurrent = transformArray(movingAverage(dataFrequencyLeft, 40), 10, 1700, barsCount, "normal");  // max 2048
+    const dataRightCurrent = transformArray(movingAverage(dataFrequencyRight, 40), 10, 1700, barsCount, "normal"); // max 2048
     
     // Mettre à jour l'état des données précédentes 
     useEffect(() => {
@@ -147,56 +157,32 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
     const dataRightProcessed = getDataPairs(dataRightCurrent, previousDataRight)
     
     // Générer les points pour dataLaftProcessed[0]
-    const amplifier = height / 350; // 160 ? Ajustez cette valeur pour contrôler l'amplitude verticale
+    const amplifier = height / 300; // 160 ? Ajustez cette valeur pour contrôler l'amplitude verticale
     const borderWidth = 1; // Épaisseur de la bordure
 
-    // Générer les points pour différentes couches
-    const generatePoints = (data) => {
-        return generateCirclePoints(data, width, height, barsCount, amplifier, pointRadius);
-    };
-
-    const linePoints = generateLinePoints(dataLeftProcessed[0], width, height, barsCount, amplifier, pointRadius);
-    const pointsCurrent = generatePoints(dataLeftProcessed[0]);
-    // const pointsPrev1 = generatePoints(dataLeftProcessed[2]);
-    // const pointsPrev2 = generatePoints(dataLeftProcessed[4]);
-    // const pointsPrev3 = generatePoints(dataLeftProcessed[6]);
-    // const pointsPrev4 = generatePoints(dataLeftProcessed[8]);
-    // const pointsPrev5 = generatePoints(dataLeftProcessed[10]);
-    // const pointsPrev6 = generatePoints(dataLeftProcessed[12]);
-    // const pointsPrev7 = generatePoints(dataLeftProcessed[14]);
-    // const pointsPrev8 = generatePoints(dataLeftProcessed[16]);
-    // const pointsPrev9 = generatePoints(dataLeftProcessed[18]);
-    // const pointsPrev10 = generatePoints(dataLeftProcessed[20]);
-    // const pointsPrev11 = generatePoints(dataLeftProcessed[22]);
-    // const pointsPrev12 = generatePoints(dataLeftProcessed[24]);
-    // const pointsPrev13 = generatePoints(dataLeftProcessed[26]);
-    // const pointsPrev14 = generatePoints(dataLeftProcessed[28]);
-    // const pointsPrev15 = generatePoints(dataLeftProcessed[30]);
-    // const pointsPrev16 = generatePoints(dataLeftProcessed[32]);
-    // const pointsPrev17 = generatePoints(dataLeftProcessed[34]);
-    // const pointsPrev18 = generatePoints(dataLeftProcessed[36]);
-    // const pointsPrev19 = generatePoints(dataLeftProcessed[38]);
-    // const pointsPrev20 = generatePoints(dataLeftProcessed[40]);
-
-    const generateHistoricalPoints = (dataProcessed, count, generatePoints, width, height, barsCount, amplifier, pointRadius) => {
-        const historicalPoints = [];
+    const generateHistoricalPoints = (dataProcessedLeft, dataProcessedRight, count, generatePoints, width, height, barsCount, amplifier, pointRadius) => {
+        const historicalPointsLeft = [];
+        const historicalPointsRight = [];
         for (let i = 0; i < count; i++) {
-            // Utiliser un pas plus petit pour rapprocher les historiques
-            const points = generatePoints(dataProcessed[i], width, height, barsCount, amplifier, pointRadius);
+            const pointsLeft = generatePoints(dataProcessedLeft[i], width, height, barsCount, amplifier, pointRadius, true);
+            const pointsRight = generatePoints(dataProcessedRight[i], width, height, barsCount, amplifier, pointRadius, false);
             
-            // Ajuster l'offset pour un espacement plus serré
-            const offset = i * 7; 
+            const offset = i * 7;
+            const opacity = Math.max(0, 1 - (i * 0.025));
             
-            // Ajuster l'opacité pour qu'elle décroisse de manière plus graduelle
-            const opacity = Math.max(0, 1 - (i * 0.025)); // 0.025 au lieu de 0.045 pour une décroissance plus lente
-            
-            historicalPoints.push({ points, offset, opacity });
+            historicalPointsLeft.push({ points: pointsLeft, offset, opacity });
+            historicalPointsRight.push({ points: pointsRight, offset, opacity }); // Même offset pour le canal droit
         }
-        return historicalPoints;
+        return { left: historicalPointsLeft, right: historicalPointsRight };
     };
     
+    const linePointsLeft = generateLinePoints(dataLeftProcessed[0], width, height, barsCount, amplifier, pointRadius, true);
+    const linePointsRight = generateLinePoints(dataRightProcessed[0], width, height, barsCount, amplifier, pointRadius, false);
+    const pointsCurrentLeft = generateCirclePoints(dataLeftProcessed[0], width, height, barsCount, amplifier, pointRadius, true);
+    const pointsCurrentRight = generateCirclePoints(dataRightProcessed[0], width, height, barsCount, amplifier, pointRadius, false);
+    
     // Utilisation :
-    const historicalPoints = generateHistoricalPoints(dataLeftProcessed, 35, generatePoints, width, height, barsCount, amplifier, pointRadius);
+    const historicalPoints = generateHistoricalPoints(dataLeftProcessed, dataRightProcessed, 35, generateCirclePoints, width, height, barsCount, amplifier, pointRadius);    
     
     return (
         <>
@@ -214,13 +200,12 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
                         />
                     </Layer>
                                         
-                    
-                    {/* Couches historiques */}
-                    {historicalPoints.map((layer, layerIndex) => (
-                        <Layer key={`layer-${layerIndex}`}>
+                    {/* Couches historiques gauche */}
+                    {historicalPoints.left.map((layer, layerIndex) => (
+                        <Layer key={`layer-left-${layerIndex}`}>
                             {layer.points.map((point, index) => (
                                 <Circle 
-                                    key={`point-${layerIndex}-${index}`}
+                                    key={`point-left-${layerIndex}-${index}`}
                                     x={point.x}
                                     y={point.y - layer.offset}
                                     radius={pointRadius}
@@ -230,10 +215,49 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
                             ))}
                         </Layer>
                     ))}
+                    {/* Couches historiques droite */}
+                    {historicalPoints.right.map((layer, layerIndex) => (
+                        <Layer key={`layer-right-${layerIndex}`}>
+                            {layer.points.map((point, index) => (
+                                <Circle 
+                                    key={`point-right-${layerIndex}-${index}`}
+                                    x={point.x}
+                                    y={point.y + layer.offset} // Notez le + ici pour la symétrie
+                                    radius={pointRadius}
+                                    fill={generateHslaColor(260, 450, point.value, 1)}
+                                    opacity={layer.opacity}
+                                />
+                            ))}
+                        </Layer>
+                    ))}
+
+
+                    {/* Couche de lignes */}
+                    <Layer>
+                        {linePointsLeft.map((point, index) => (
+                            <Line
+                                key={`line-${index}`}
+                                points={[point.x, point.y1, point.x, point.y2]}
+                                stroke={"#000"}
+                                strokeWidth={pointRadius * 2}
+                            />
+                        ))}
+                    </Layer>
+                    {/* Couche de lignes */}
+                    <Layer>
+                        {linePointsRight.map((point, index) => (
+                            <Line
+                                key={`line-${index}`}
+                                points={[point.x, point.y1, point.x, point.y2]}
+                                stroke={"#000"}
+                                strokeWidth={pointRadius * 2}
+                            />
+                        ))}
+                    </Layer>
 
                     {/* Couche actuelle */}
                     <Layer>
-                        {pointsCurrent.map((point, index) => (
+                        {pointsCurrentLeft.map((point, index) => (
                             <Circle 
                                 key={`current-${index}`}
                                 x={point.x}
@@ -245,17 +269,21 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
                         ))}
                     </Layer>
 
-                    {/* Couche de lignes */}
+                    {/* Couche actuelle */}
                     <Layer>
-                        {linePoints.map((point, index) => (
-                            <Line
-                                key={`line-${index}`}
-                                points={[point.x, point.y1, point.x, point.y2]}
-                                stroke={"#000"}
-                                strokeWidth={pointRadius * 2}
+                        {pointsCurrentRight.map((point, index) => (
+                            <Circle 
+                                key={`current-${index}`}
+                                x={point.x}
+                                y={point.y}
+                                radius={pointRadius}
+                                fill={generateHslaColor(260, 400, point.value, 1)}
+                                opacity={1}
                             />
                         ))}
                     </Layer>
+
+                    
 
                 </Stage>
             </CanvasContainer>
@@ -263,7 +291,7 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
     );
 };
 
-AudioSoundScape.propTypes = {
+AudioSoundScapeStereo.propTypes = {
     dataFrequencyLeft: PropTypes.array.isRequired,
     dataFrequencyRight: PropTypes.array.isRequired,
 };
@@ -278,4 +306,4 @@ const CanvasContainer = styled.div`
     background-color: #000;
 `;
 
-export default AudioSoundScape;
+export default AudioSoundScapeStereo;

@@ -79,11 +79,11 @@ function generateHslaColor(baseHue, limitHue, variation, alpha) {
     return `hsla(${newHue}, 90%, 61%, ${alpha})`;
 }
 
-const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
+const AudioSoundScapeMono = ({ dataFrequencyMono }) => {
     const stageRef = useRef(null);
     // Première groupe
-    const barsCount = 150;
-    const history = 81;
+    const barsCount = 140;
+    const history = 61;
     const pointRadius = 1.4; // le rayon des points ici
 
     // Gestion de la taille du canvas
@@ -115,20 +115,17 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
     };
     // État pour stocker les données précédentes
     const [previousDataLeft, setPreviousDataLeft] = useState(createInitialState);  // un tableau de tableaux remplis de 0
-    const [previousDataRight, setPreviousDataRight] = useState(createInitialState);
 
     // Générer les données actuelles
     // Premier groupe
-    const dataLeftCurrent = transformArray(movingAverage(dataFrequencyLeft, 60), 10, 1850, barsCount, "normal");  // max 2048
-    const dataRightCurrent = transformArray(movingAverage(dataFrequencyRight, 60), 10, 1850, barsCount, "reverse"); // max 2048
+    const dataLeftCurrent = transformArray(movingAverage(dataFrequencyMono, 40), 0, 1800, barsCount, "normal");  // max 2048
     
     // Mettre à jour l'état des données précédentes 
     useEffect(() => {
         // setPreviousDataLeft(prev => [...prev.slice(-history), dataLeftCurrent]);
         // setPreviousDataRight(prev => [...prev.slice(-history), dataRightCurrent]);
         setPreviousDataLeft(prev => [dataLeftCurrent, ...prev.slice(0, history - 1)]);
-        setPreviousDataRight(prev => [dataRightCurrent, ...prev.slice(0, history - 1)]);
-    }, [dataFrequencyLeft, dataFrequencyRight]);
+    }, [dataFrequencyMono]);
 
 
     const getDataPairs = (currentData, previousDataArray) => {
@@ -144,10 +141,9 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
 
     // Données à utiliser pour générer les points 
     const dataLeftProcessed = getDataPairs(dataLeftCurrent, previousDataLeft)
-    const dataRightProcessed = getDataPairs(dataRightCurrent, previousDataRight)
     
     // Générer les points pour dataLaftProcessed[0]
-    const amplifier = height / 350; // 160 ? Ajustez cette valeur pour contrôler l'amplitude verticale
+    const amplifier = height / 120; // 160 ? Ajustez cette valeur pour contrôler l'amplitude verticale
     const borderWidth = 1; // Épaisseur de la bordure
 
     // Générer les points pour différentes couches
@@ -157,26 +153,7 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
 
     const linePoints = generateLinePoints(dataLeftProcessed[0], width, height, barsCount, amplifier, pointRadius);
     const pointsCurrent = generatePoints(dataLeftProcessed[0]);
-    // const pointsPrev1 = generatePoints(dataLeftProcessed[2]);
-    // const pointsPrev2 = generatePoints(dataLeftProcessed[4]);
-    // const pointsPrev3 = generatePoints(dataLeftProcessed[6]);
-    // const pointsPrev4 = generatePoints(dataLeftProcessed[8]);
-    // const pointsPrev5 = generatePoints(dataLeftProcessed[10]);
-    // const pointsPrev6 = generatePoints(dataLeftProcessed[12]);
-    // const pointsPrev7 = generatePoints(dataLeftProcessed[14]);
-    // const pointsPrev8 = generatePoints(dataLeftProcessed[16]);
-    // const pointsPrev9 = generatePoints(dataLeftProcessed[18]);
-    // const pointsPrev10 = generatePoints(dataLeftProcessed[20]);
-    // const pointsPrev11 = generatePoints(dataLeftProcessed[22]);
-    // const pointsPrev12 = generatePoints(dataLeftProcessed[24]);
-    // const pointsPrev13 = generatePoints(dataLeftProcessed[26]);
-    // const pointsPrev14 = generatePoints(dataLeftProcessed[28]);
-    // const pointsPrev15 = generatePoints(dataLeftProcessed[30]);
-    // const pointsPrev16 = generatePoints(dataLeftProcessed[32]);
-    // const pointsPrev17 = generatePoints(dataLeftProcessed[34]);
-    // const pointsPrev18 = generatePoints(dataLeftProcessed[36]);
-    // const pointsPrev19 = generatePoints(dataLeftProcessed[38]);
-    // const pointsPrev20 = generatePoints(dataLeftProcessed[40]);
+    
 
     const generateHistoricalPoints = (dataProcessed, count, generatePoints, width, height, barsCount, amplifier, pointRadius) => {
         const historicalPoints = [];
@@ -185,10 +162,10 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
             const points = generatePoints(dataProcessed[i], width, height, barsCount, amplifier, pointRadius);
             
             // Ajuster l'offset pour un espacement plus serré
-            const offset = i * 7; 
+            const offset = i * 10; 
             
             // Ajuster l'opacité pour qu'elle décroisse de manière plus graduelle
-            const opacity = Math.max(0, 1 - (i * 0.025)); // 0.025 au lieu de 0.045 pour une décroissance plus lente
+            const opacity = Math.max(0, 1 - (i * 0.02)); // 0.025 au lieu de 0.045 pour une décroissance plus lente
             
             historicalPoints.push({ points, offset, opacity });
         }
@@ -196,7 +173,7 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
     };
     
     // Utilisation :
-    const historicalPoints = generateHistoricalPoints(dataLeftProcessed, 35, generatePoints, width, height, barsCount, amplifier, pointRadius);
+    const historicalPoints = generateHistoricalPoints(dataLeftProcessed, 45, generatePoints, width, height, barsCount, amplifier, pointRadius);
     
     return (
         <>
@@ -251,8 +228,9 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
                             <Line
                                 key={`line-${index}`}
                                 points={[point.x, point.y1, point.x, point.y2]}
+                                //stroke={generateHslaColor(260, 400, point.value, 1)}
                                 stroke={"#000"}
-                                strokeWidth={pointRadius * 2}
+                                strokeWidth={pointRadius * 10}
                             />
                         ))}
                     </Layer>
@@ -263,9 +241,8 @@ const AudioSoundScape = ({ dataFrequencyLeft, dataFrequencyRight }) => {
     );
 };
 
-AudioSoundScape.propTypes = {
-    dataFrequencyLeft: PropTypes.array.isRequired,
-    dataFrequencyRight: PropTypes.array.isRequired,
+AudioSoundScapeMono.propTypes = {
+    dataFrequencyMono: PropTypes.array.isRequired,
 };
 
 const CanvasContainer = styled.div`
@@ -278,4 +255,4 @@ const CanvasContainer = styled.div`
     background-color: #000;
 `;
 
-export default AudioSoundScape;
+export default AudioSoundScapeMono;
