@@ -17,26 +17,30 @@ function movingAverage(arr, windowSize) {
 }
 
 // Fonction pour générer des points de cercle à partir d'un jeu de données
-function generateCirclePoints(dataSet, width, height, barsCount, amplifier, pointRadius) {
+function generateCirclePoints(dataSet, width, height, barsCount, amplifier, pointRadius, historyIndex = 0) {
     const points = [];
-    const baseHeight = height - pointRadius; // Ajuster pour le rayon du point
-    const effectiveWidth = width - 2 * pointRadius; // Largeur effective pour les points
+    const baseHeight = height - pointRadius;
+    const shrinkPercentage = historyIndex * 0.3; // 0.5% de rétrécissement par ligne d'historique
+    const effectiveWidth = width * (1 - shrinkPercentage / 50); // Réduire la largeur effective
+    const startX = (width - effectiveWidth) / 2; // Centrer la ligne rétrécie
 
     dataSet.forEach((val, i) => {
-        const x = pointRadius + (i / (barsCount - 1)) * effectiveWidth; // Ajuster pour le rayon du point
-        const y = Math.max(pointRadius, Math.min(baseHeight - val * amplifier, baseHeight)); // Limiter y entre pointRadius et baseHeight
+        const x = startX + (i / (barsCount - 1)) * effectiveWidth;
+        const y = Math.max(pointRadius, Math.min(baseHeight - val * amplifier, baseHeight));
         points.push({ x, y, value: val });
     });
 
     return points;
 }
 
-const generateLinePoints = (dataSet, width, height, barsCount, amplifier, pointRadius) => {
+const generateLinePoints = (dataSet, width, height, barsCount, amplifier, pointRadius, historyIndex = 0) => {
     const points = [];
-    const effectiveWidth = width - 2 * pointRadius;
+    const shrinkPercentage = historyIndex * 0.5;
+    const effectiveWidth = width - 2 * pointRadius - (width * shrinkPercentage / 100);
+    const startX = pointRadius + (width * shrinkPercentage / 200);
 
     dataSet.forEach((val, i) => {
-        const x = pointRadius + (i / (barsCount - 1)) * effectiveWidth;
+        const x = startX + (i / (barsCount - 1)) * effectiveWidth;
         const y1 = height; // Point de départ en bas
         const y2 = Math.max(pointRadius, Math.min(height - val * amplifier, height)); // Point d'arrivée, même calcul que pour les cercles
         points.push({ x, y1, y2, value: val });
@@ -83,7 +87,7 @@ const AudioSoundScapeMono = ({ dataFrequencyMono }) => {
     const stageRef = useRef(null);
     // Première groupe
     const barsCount = 140;
-    const history = 61;
+    const history = 200;
     const pointRadius = 1.4; // le rayon des points ici
 
     // Gestion de la taille du canvas
@@ -117,13 +121,10 @@ const AudioSoundScapeMono = ({ dataFrequencyMono }) => {
     const [previousDataLeft, setPreviousDataLeft] = useState(createInitialState);  // un tableau de tableaux remplis de 0
 
     // Générer les données actuelles
-    // Premier groupe
-    const dataLeftCurrent = transformArray(movingAverage(dataFrequencyMono, 40), 0, 1800, barsCount, "normal");  // max 2048
+    const dataLeftCurrent = transformArray(movingAverage(dataFrequencyMono, 100), 0, 1800, barsCount, "normal");  // max 2048
     
     // Mettre à jour l'état des données précédentes 
     useEffect(() => {
-        // setPreviousDataLeft(prev => [...prev.slice(-history), dataLeftCurrent]);
-        // setPreviousDataRight(prev => [...prev.slice(-history), dataRightCurrent]);
         setPreviousDataLeft(prev => [dataLeftCurrent, ...prev.slice(0, history - 1)]);
     }, [dataFrequencyMono]);
 
@@ -147,33 +148,29 @@ const AudioSoundScapeMono = ({ dataFrequencyMono }) => {
     const borderWidth = 1; // Épaisseur de la bordure
 
     // Générer les points pour différentes couches
-    const generatePoints = (data) => {
-        return generateCirclePoints(data, width, height, barsCount, amplifier, pointRadius);
+    const generatePoints = (data, width, height, barsCount, amplifier, pointRadius, historyIndex) => {
+        return generateCirclePoints(data, width, height, barsCount, amplifier, pointRadius, historyIndex);
     };
 
-    const linePoints = generateLinePoints(dataLeftProcessed[0], width, height, barsCount, amplifier, pointRadius);
-    const pointsCurrent = generatePoints(dataLeftProcessed[0]);
-    
+    const linePoints = generateLinePoints(dataLeftProcessed[0], width, height, barsCount, amplifier, pointRadius, 0);
+    const pointsCurrent = generatePoints(dataLeftProcessed[0], width, height, barsCount, amplifier, pointRadius, 0);
 
     const generateHistoricalPoints = (dataProcessed, count, generatePoints, width, height, barsCount, amplifier, pointRadius) => {
         const historicalPoints = [];
         for (let i = 0; i < count; i++) {
-            // Utiliser un pas plus petit pour rapprocher les historiques
-            const points = generatePoints(dataProcessed[i], width, height, barsCount, amplifier, pointRadius);
-            
-            // Ajuster l'offset pour un espacement plus serré
-            const offset = i * 10; 
-            
-            // Ajuster l'opacité pour qu'elle décroisse de manière plus graduelle
-            const opacity = Math.max(0, 1 - (i * 0.02)); // 0.025 au lieu de 0.045 pour une décroissance plus lente
+            const points = generatePoints(dataProcessed[i], width, height, barsCount, amplifier, pointRadius, i);
+
+            const offset = i * 6; 
+            const opacity = Math.max(0, 1 - (i * 0.015));
             
             historicalPoints.push({ points, offset, opacity });
         }
         return historicalPoints;
     };
+
     
     // Utilisation :
-    const historicalPoints = generateHistoricalPoints(dataLeftProcessed, 45, generatePoints, width, height, barsCount, amplifier, pointRadius);
+    const historicalPoints = generateHistoricalPoints(dataLeftProcessed, 60, generatePoints, width, height, barsCount, amplifier, pointRadius);
     
     return (
         <>
